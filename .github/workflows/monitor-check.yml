@@ -1,0 +1,21 @@
+name: Uptime Monitor Cron
+
+on:
+  schedule:
+    # 每 5 分钟运行一次（cron 表达式：分 时 日 月 周）
+    - cron: '*/5 * * * *'
+  # 允许手动触发
+  workflow_dispatch:
+
+jobs:
+  check-monitors:
+    name: 检查监控
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 调用 /api/check 端点
+        run: |
+          curl -X POST ${{ secrets.SITE_URL }}/api/check \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --max-time 30
