@@ -24,9 +24,9 @@ import type { Monitor, CheckResult, Incident } from "@/lib/types";
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 function formatInterval(seconds: number): string {
-  if (seconds < 60) return `${seconds} seconds`;
-  if (seconds < 3600) return `${Math.round(seconds / 60)} minutes`;
-  return `${Math.round(seconds / 3600)} hour${Math.round(seconds / 3600) > 1 ? "s" : ""}`;
+  if (seconds < 60) return `${seconds} 秒`;
+  if (seconds < 3600) return `${Math.round(seconds / 60)} 分钟`;
+  return `${Math.round(seconds / 3600)} 小时${Math.round(seconds / 3600) > 1 ? "" : ""}`;
 }
 
 interface MonitorDetailProps {
@@ -70,7 +70,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
   }
 
   async function handleDelete() {
-    if (!confirm("Are you sure you want to delete this monitor?")) return;
+    if (!confirm("确定要删除此监控吗？")) return;
     setDeleting(true);
     await fetch(`/api/monitors/${currentMonitor.id}`, { method: "DELETE" });
     router.push("/dashboard");
@@ -85,7 +85,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
+          返回仪表盘
         </Link>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -104,7 +104,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
               disabled={checking}
             >
               <Play className="h-3.5 w-3.5" />
-              {checking ? "Checking..." : "Run Check"}
+              {checking ? "检查中..." : "运行检查"}
             </Button>
             <EditMonitorDialog
               monitor={currentMonitor}
@@ -118,7 +118,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
               disabled={deleting}
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Delete
+              删除
             </Button>
           </div>
         </div>
@@ -130,7 +130,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
           <CardContent className="flex items-center gap-3 p-4">
             <Globe className="h-5 w-5 text-muted-foreground" />
             <div className="min-w-0">
-              <p className="text-xs text-muted-foreground">URL</p>
+              <p className="text-xs text-muted-foreground">URL 地址</p>
               <a
                 href={currentMonitor.url}
                 target="_blank"
@@ -148,7 +148,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
           <CardContent className="flex items-center gap-3 p-4">
             <Clock className="h-5 w-5 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Check Interval</p>
+              <p className="text-xs text-muted-foreground">检查间隔</p>
               <p className="text-sm font-medium text-card-foreground">
                 {formatInterval(currentMonitor.check_interval_seconds)}
               </p>
@@ -160,10 +160,10 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
           <CardContent className="flex items-center gap-3 p-4">
             <Shield className="h-5 w-5 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">SSL Certificate</p>
+              <p className="text-xs text-muted-foreground">SSL 证书</p>
               <p className="text-sm font-medium text-card-foreground">
                 {latestCheck?.ssl_days_remaining != null
-                  ? `${latestCheck.ssl_days_remaining} days remaining`
+                  ? `${latestCheck.ssl_days_remaining} 天剩余`
                   : "N/A"}
               </p>
             </div>
@@ -174,7 +174,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
           <CardContent className="flex items-center gap-3 p-4">
             <Clock className="h-5 w-5 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Response Time</p>
+              <p className="text-xs text-muted-foreground">响应时间</p>
               <p className="text-sm font-mono font-medium text-card-foreground">
                 {latestCheck?.response_time_ms != null
                   ? `${latestCheck.response_time_ms}ms`
@@ -189,7 +189,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
       <Card className="bg-card">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-medium text-card-foreground">
-            Uptime History (Last 30 checks)
+            运行时间历史（最近30次检查）
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -204,13 +204,13 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
       <Card className="bg-card">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-medium text-card-foreground">
-            Recent Checks
+            最近检查
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {!checks || checks.length === 0 ? (
             <div className="px-6 py-8 text-center text-sm text-muted-foreground">
-              No checks recorded yet.
+              暂无检查记录
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -247,13 +247,13 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
       <Card className="bg-card">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-medium text-card-foreground">
-            Incidents
+            故障记录
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {!incidents || incidents.length === 0 ? (
             <div className="px-6 py-8 text-center text-sm text-muted-foreground">
-              No incidents recorded.
+              暂无故障记录
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -268,7 +268,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
                       size="sm"
                     />
                     <span className="text-card-foreground">
-                      {incident.cause || "No details"}
+                      {incident.cause || "无详情"}
                     </span>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">

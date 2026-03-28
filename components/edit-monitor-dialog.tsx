@@ -32,14 +32,14 @@ interface EditMonitorDialogProps {
 }
 
 const INTERVAL_OPTIONS = [
-  { label: "Every 1 minute", value: "60" },
-  { label: "Every 5 minutes", value: "300" },
-  { label: "Every 15 minutes", value: "900" },
-  { label: "Every 30 minutes", value: "1800" },
-  { label: "Every 1 hour", value: "3600" },
-  { label: "Every 6 hours", value: "21600" },
-  { label: "Every 12 hours", value: "43200" },
-  { label: "Every 24 hours", value: "86400" },
+  { label: "每 1 分钟", value: "60" },
+  { label: "每 5 分钟", value: "300" },
+  { label: "每 15 分钟", value: "900" },
+  { label: "每 30 分钟", value: "1800" },
+  { label: "每 1 小时", value: "3600" },
+  { label: "每 6 小时", value: "21600" },
+  { label: "每 12 小时", value: "43200" },
+  { label: "每 24 小时", value: "86400" },
 ];
 
 export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
@@ -80,14 +80,14 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Failed to update monitor");
+        setError(data.error || "更新监控失败");
         return;
       }
 
       setOpen(false);
       onSave();
     } catch {
-      setError("Failed to update monitor");
+      setError("更新监控失败");
     } finally {
       setLoading(false);
     }
@@ -98,14 +98,14 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5 bg-transparent">
           <Pencil className="h-3.5 w-3.5" />
-          Edit
+          编辑
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-card text-card-foreground sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Monitor</DialogTitle>
+          <DialogTitle>编辑监控</DialogTitle>
           <DialogDescription>
-            Update the configuration for this endpoint.
+            更新此监控端点的配置。
           </DialogDescription>
         </DialogHeader>
 
@@ -117,7 +117,7 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
           )}
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="edit-name">Name</Label>
+            <Label htmlFor="edit-name">名称</Label>
             <Input
               id="edit-name"
               value={name}
@@ -128,7 +128,7 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="edit-url">URL</Label>
+            <Label htmlFor="edit-url">URL 地址</Label>
             <Input
               id="edit-url"
               value={url}
@@ -141,7 +141,7 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="edit-method">HTTP Method</Label>
+              <Label htmlFor="edit-method">HTTP 方法</Label>
               <Select value={method} onValueChange={setMethod}>
                 <SelectTrigger id="edit-method" className="bg-background">
                   <SelectValue />
@@ -155,7 +155,7 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="edit-expected-status">Expected Status</Label>
+              <Label htmlFor="edit-expected-status">预期状态码</Label>
               <Input
                 id="edit-expected-status"
                 value={expectedStatus}
@@ -170,7 +170,7 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="edit-interval">Check Interval</Label>
+              <Label htmlFor="edit-interval">检查间隔</Label>
               <Select value={interval} onValueChange={setInterval}>
                 <SelectTrigger id="edit-interval" className="bg-background">
                   <SelectValue />
@@ -186,7 +186,7 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="edit-timeout">Timeout (seconds)</Label>
+              <Label htmlFor="edit-timeout">超时时间（秒）</Label>
               <Input
                 id="edit-timeout"
                 value={timeout}
@@ -200,7 +200,7 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
           </div>
 
           <div className="flex items-center justify-between rounded-md border border-border p-3">
-            <Label htmlFor="edit-active">Active</Label>
+            <Label htmlFor="edit-active">启用</Label>
             <Switch
               id="edit-active"
               checked={isActive}
@@ -214,10 +214,10 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
               variant="outline"
               onClick={() => setOpen(false)}
             >
-              Cancel
+              取消
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? "保存中..." : "保存更改"}
             </Button>
           </DialogFooter>
         </form>
