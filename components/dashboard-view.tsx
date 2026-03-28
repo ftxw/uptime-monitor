@@ -55,9 +55,9 @@ export function DashboardView() {
       {/* Page header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
+          <h1 className="text-xl font-semibold text-foreground">控制台</h1>
           <p className="text-sm text-muted-foreground">
-            Monitor the health and performance of your endpoints.
+            监控您端点的健康和性能状态。
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -69,7 +69,7 @@ export function DashboardView() {
             disabled={checkingAll || (data?.stats.total_monitors ?? 0) === 0}
           >
             <Play className={`h-3.5 w-3.5 ${checkingAll ? "animate-pulse" : ""}`} />
-            {checkingAll ? "Checking..." : "Check All Now"}
+            {checkingAll ? "检查中..." : "立即全部检查"}
           </Button>
           <AddMonitorDialog onAdd={() => mutate()} />
           <Button
@@ -77,7 +77,7 @@ export function DashboardView() {
             size="icon"
             onClick={() => mutate()}
             className="h-9 w-9"
-            aria-label="Refresh dashboard"
+            aria-label="刷新控制台"
           >
             <RefreshCw
               className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}

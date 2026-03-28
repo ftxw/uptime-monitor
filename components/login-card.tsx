@@ -44,10 +44,10 @@ export function LoginCard({ clientId, error }: LoginCardProps) {
             <Activity className="h-6 w-6 text-primary-foreground" />
           </div>
           <CardTitle className="text-xl font-semibold text-foreground">
-            Uptime Monitor
+            系统监控
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            Sign in with your Vercel account to access the dashboard.
+            使用您的 Vercel 账户登录以访问控制台。
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -58,9 +58,9 @@ export function LoginCard({ clientId, error }: LoginCardProps) {
           )}
           {!isConfigured && (
             <div className="rounded-md bg-warning/10 px-3 py-2 text-sm text-warning">
-              OAuth is not configured yet. Set the
-              NEXT_PUBLIC_VERCEL_APP_CLIENT_ID environment variable to enable
-              sign in.
+              OAuth 尚未配置。设置
+              NEXT_PUBLIC_VERCEL_APP_CLIENT_ID 环境变量以启用
+              登录功能。
             </div>
           )}
           <Button
@@ -77,7 +77,7 @@ export function LoginCard({ clientId, error }: LoginCardProps) {
             >
               <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" />
             </svg>
-            Sign In with Vercel
+            使用 Vercel 登录
           </Button>
         </CardContent>
       </Card>

@@ -10,8 +10,8 @@ interface UptimeBarProps {
 }
 
 /**
- * A visual bar showing the last 30 check results as colored segments.
- * Green = up, Red = down, Yellow = degraded, Gray = no data.
+ * 一个可视化的条形图，显示最近 30 次检查结果为彩色段。
+ * 绿色 = 正常，红色 = 离线，黄色 = 降级，灰色 = 无数据。
  */
 export function UptimeBar({ monitorId }: UptimeBarProps) {
   const { data: checks } = useSWR<CheckResult[]>(
@@ -24,7 +24,7 @@ export function UptimeBar({ monitorId }: UptimeBarProps) {
   const results = checks ? [...checks].reverse() : [];
 
   return (
-    <div className="flex items-center gap-0.5" aria-label="Uptime history">
+    <div className="flex items-center gap-0.5" aria-label="运行历史">
       {Array.from({ length: segments }).map((_, i) => {
         const check = results[i];
         let colorClass = "bg-muted";
@@ -40,7 +40,7 @@ export function UptimeBar({ monitorId }: UptimeBarProps) {
             title={
               check
                 ? `${check.status} - ${new Date(check.checked_at).toLocaleString()}`
-                : "No data"
+                : "无数据"
             }
           />
         );
