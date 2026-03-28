@@ -29,14 +29,14 @@ interface AddMonitorDialogProps {
 }
 
 const INTERVAL_OPTIONS = [
-  { label: "Every 1 minute", value: "60" },
-  { label: "Every 5 minutes", value: "300" },
-  { label: "Every 15 minutes", value: "900" },
-  { label: "Every 30 minutes", value: "1800" },
-  { label: "Every 1 hour", value: "3600" },
-  { label: "Every 6 hours", value: "21600" },
-  { label: "Every 12 hours", value: "43200" },
-  { label: "Every 24 hours", value: "86400" },
+  { label: "每 1 分钟", value: "60" },
+  { label: "每 5 分钟", value: "300" },
+  { label: "每 15 分钟", value: "900" },
+  { label: "每 30 分钟", value: "1800" },
+  { label: "每 1 小时", value: "3600" },
+  { label: "每 6 小时", value: "21600" },
+  { label: "每 12 小时", value: "43200" },
+  { label: "每 24 小时", value: "86400" },
 ];
 
 export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
@@ -71,7 +71,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Failed to create monitor");
+        setError(data.error || "创建监控失败");
         return;
       }
 
@@ -85,7 +85,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
       setOpen(false);
       onAdd();
     } catch {
-      setError("Failed to create monitor");
+      setError("创建监控失败");
     } finally {
       setLoading(false);
     }
@@ -96,14 +96,14 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="h-4 w-4" />
-          Add Monitor
+          添加监控
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-card text-card-foreground sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Monitor</DialogTitle>
+          <DialogTitle>添加监控</DialogTitle>
           <DialogDescription>
-            Add a new endpoint to monitor. It will start checking immediately.
+            添加新的监控端点。系统将立即开始检查。
           </DialogDescription>
         </DialogHeader>
 
@@ -115,10 +115,10 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
           )}
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">名称</Label>
             <Input
               id="name"
-              placeholder="My Website"
+              placeholder="我的网站"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -141,7 +141,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="method">HTTP Method</Label>
+              <Label htmlFor="method">HTTP 方法</Label>
               <Select value={method} onValueChange={setMethod}>
                 <SelectTrigger id="method" className="bg-background">
                   <SelectValue />
@@ -155,7 +155,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="expected-status">Expected Status</Label>
+              <Label htmlFor="expected-status">预期状态码</Label>
               <Input
                 id="expected-status"
                 value={expectedStatus}
@@ -170,7 +170,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="interval">Check Interval</Label>
+              <Label htmlFor="interval">检查间隔</Label>
               <Select value={interval} onValueChange={setInterval}>
                 <SelectTrigger id="interval" className="bg-background">
                   <SelectValue />
@@ -186,7 +186,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="timeout">Timeout (seconds)</Label>
+              <Label htmlFor="timeout">超时时间（秒）</Label>
               <Input
                 id="timeout"
                 value={timeout}
@@ -205,10 +205,10 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
               variant="outline"
               onClick={() => setOpen(false)}
             >
-              Cancel
+              取消
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Adding..." : "Add Monitor"}
+              {loading ? "添加中..." : "添加监控"}
             </Button>
           </DialogFooter>
         </form>

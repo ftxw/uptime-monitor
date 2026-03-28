@@ -32,27 +32,27 @@ function formatInterval(seconds: number): string {
 }
 
 export function MonitorTable({ monitors, onDelete }: MonitorTableProps) {
-  if (monitors.length === 0) {
-    return (
-      <Card className="bg-card">
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <Globe className="mb-4 h-12 w-12 text-muted-foreground/50" />
-          <p className="text-lg font-medium text-card-foreground">
-            No monitors yet
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Add your first endpoint to start monitoring.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+    if (monitors.length === 0) {
+      return (
+        <Card className="bg-card">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Globe className="mb-4 h-12 w-12 text-muted-foreground/50" />
+            <p className="text-lg font-medium text-card-foreground">
+              还没有监控
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              添加您的第一个端点以开始监控。
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
 
   return (
     <Card className="bg-card">
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-medium text-card-foreground">
-          Monitors
+          监控列表
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
@@ -97,7 +97,7 @@ export function MonitorTable({ monitors, onDelete }: MonitorTableProps) {
               <div className="flex items-center gap-6 text-sm lg:w-48 lg:justify-end">
                 <div className="flex flex-col items-start lg:items-end">
                   <span className="text-xs text-muted-foreground">
-                    Response
+                    响应时间
                   </span>
                   <span className="font-mono text-card-foreground">
                     {formatResponseTime(
@@ -120,7 +120,7 @@ export function MonitorTable({ monitors, onDelete }: MonitorTableProps) {
                           }`}
                       />
                       {monitor.latest_check?.ssl_days_remaining != null
-                        ? `${monitor.latest_check.ssl_days_remaining}d`
+                        ? `${monitor.latest_check.ssl_days_remaining}天`
                         : "--"}
                     </span>
                   </div>
@@ -129,7 +129,7 @@ export function MonitorTable({ monitors, onDelete }: MonitorTableProps) {
                 {/* Uptime % */}
                 <div className="flex flex-col items-start lg:items-end">
                   <span className="text-xs text-muted-foreground">
-                    Uptime 24h
+                    24小时运行时间
                   </span>
                   <span className="font-mono text-card-foreground">
                     {monitor.uptime_24h !== null
@@ -149,13 +149,13 @@ export function MonitorTable({ monitors, onDelete }: MonitorTableProps) {
                       className="h-8 w-8 text-muted-foreground"
                     >
                       <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Actions</span>
+                      <span className="sr-only">操作</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
                       <Link href={`/dashboard/monitors/${monitor.id}`}>
-                        View Details
+                        查看详情
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -165,7 +165,7 @@ export function MonitorTable({ monitors, onDelete }: MonitorTableProps) {
                         rel="noopener noreferrer"
                         className="flex items-center gap-2"
                       >
-                        Open URL
+                        打开链接
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     </DropdownMenuItem>
@@ -173,7 +173,7 @@ export function MonitorTable({ monitors, onDelete }: MonitorTableProps) {
                       className="text-destructive"
                       onClick={() => onDelete(monitor.id)}
                     >
-                      Delete
+                      删除
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

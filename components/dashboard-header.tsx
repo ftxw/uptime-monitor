@@ -24,7 +24,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
             <Activity className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="text-sm font-semibold text-card-foreground">
-            Uptime Monitor
+            系统监控
           </span>
         </div>
 
@@ -61,7 +61,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
                 }}
               >
                 <LogOut className="h-3 w-3" />
-                Sign Out
+                退出登录
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

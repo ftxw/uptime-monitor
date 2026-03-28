@@ -15,31 +15,31 @@ interface StatCardsProps {
 export function StatCards({ stats }: StatCardsProps) {
   const cards = [
     {
-      label: "Total Monitors",
+      label: "监控总数",
       value: stats.total_monitors,
       icon: Activity,
       iconClass: "text-primary bg-primary/10",
     },
     {
-      label: "Monitors Up",
+      label: "运行中",
       value: stats.monitors_up,
       icon: ArrowUp,
       iconClass: "text-success bg-success/10",
     },
     {
-      label: "Monitors Down",
+      label: "离线",
       value: stats.monitors_down,
       icon: ArrowDown,
       iconClass: "text-destructive bg-destructive/10",
     },
     {
-      label: "Overall Uptime (24h)",
+      label: "24小时运行率",
       value: `${stats.overall_uptime_24h.toFixed(1)}%`,
       icon: Shield,
       iconClass: "text-primary bg-primary/10",
     },
     {
-      label: "Active Incidents",
+      label: "活跃事件",
       value: stats.active_incidents,
       icon: AlertTriangle,
       iconClass:
