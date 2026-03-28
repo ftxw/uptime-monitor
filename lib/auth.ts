@@ -2,32 +2,27 @@ import { cookies } from "next/headers";
 import type { UserSession } from "./types";
 
 /**
- * Authentication helpers for Sign In with Vercel.
+ * Authentication helpers using simple password-based auth.
  *
- * Uses a simple session cookie containing the user's email, name, and avatar.
- * The ALLOWED_EMAILS environment variable controls which accounts can access the app.
+ * Uses a simple session cookie containing user's email and name.
+ * The ADMIN_PASSWORD environment variable is used for authentication.
  *
  * Setup:
- * 1. Create an App in Vercel Dashboard > Settings > OAuth Apps
- * 2. Set NEXT_PUBLIC_VERCEL_APP_CLIENT_ID and VERCEL_APP_CLIENT_SECRET env vars
- * 3. Set ALLOWED_EMAILS as a comma-separated list (e.g. "alice@example.com,bob@example.com")
+ * 1. Set ADMIN_PASSWORD env var (e.g., "your-secure-password")
+ * 2. Optionally set ADMIN_EMAIL (default: "admin@example.com")
+ * 3. Optionally set ADMIN_NAME (default: "Admin")
  */
 
 const SESSION_COOKIE = "uptime_session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
-function getAllowedEmails(): string[] {
-  const raw = process.env.ALLOWED_EMAILS ?? "";
-  return raw
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-}
-
-export function isEmailAllowed(email: string): boolean {
-  const allowed = getAllowedEmails();
-  if (allowed.length === 0) return true; // If no whitelist, allow all
-  return allowed.includes(email.toLowerCase());
+export function isAdminPassword(password: string): boolean {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) {
+    console.warn("WARNING: ADMIN_PASSWORD is not set. Password authentication is disabled.");
+    return false;
+  }
+  return password === adminPassword;
 }
 
 /**
@@ -50,13 +45,13 @@ export async function setSession(user: UserSession): Promise<void> {
  * Returns null if not authenticated.
  *
  * In development (or when BYPASS_AUTH=true), returns a mock session
- * so you can preview the dashboard without a working OAuth flow.
+ * so you can preview the dashboard without entering a password.
  */
 export async function getSession(): Promise<UserSession | null> {
   if (process.env.BYPASS_AUTH === "true") {
     return {
-      email: process.env.ALLOWED_EMAILS?.split(",")[0]?.trim() ?? "dev@localhost",
-      name: "Dev User",
+      email: process.env.ADMIN_EMAIL || "admin@example.com",
+      name: process.env.ADMIN_NAME || "Admin",
       avatar_url: null,
     };
   }
@@ -82,7 +77,7 @@ export async function clearSession(): Promise<void> {
 }
 
 /**
- * Require authentication. Returns the session or throws a redirect.
+ * Require authentication. Returns the session or throws an error.
  */
 export async function requireAuth(): Promise<UserSession> {
   const session = await getSession();

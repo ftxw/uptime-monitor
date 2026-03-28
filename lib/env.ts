@@ -24,22 +24,14 @@ function getOptionalEnv(key: string, defaultValue: string = ""): string {
 export function validateEnv(): void {
   // Only validate in production or when not bypassing auth
   if (process.env.BYPASS_AUTH !== "true") {
-    getRequiredEnv("NEXT_PUBLIC_VERCEL_APP_CLIENT_ID");
-    getRequiredEnv("VERCEL_APP_CLIENT_SECRET");
+    getRequiredEnv("ADMIN_PASSWORD");
   }
 
   // Database is always required
   getRequiredEnv("DATABASE_URL");
 
-  // ALLOWED_EMAILS is required unless bypassing auth
-  if (process.env.BYPASS_AUTH !== "true") {
-    const allowedEmails = getOptionalEnv("ALLOWED_EMAILS");
-    if (!allowedEmails) {
-      console.warn(
-        "WARNING: ALLOWED_EMAILS is not set. All authenticated users will be allowed access."
-      );
-    }
-  }
+  // Cron secret is required for automated monitoring
+  getOptionalEnv("CRON_SECRET");
 }
 
 /**
@@ -47,9 +39,9 @@ export function validateEnv(): void {
  */
 export const env = {
   databaseUrl: () => getRequiredEnv("DATABASE_URL"),
-  vercelClientId: () => getOptionalEnv("NEXT_PUBLIC_VERCEL_APP_CLIENT_ID", ""),
-  vercelClientSecret: () => getOptionalEnv("VERCEL_APP_CLIENT_SECRET", ""),
-  allowedEmails: () => getOptionalEnv("ALLOWED_EMAILS", ""),
+  adminPassword: () => getOptionalEnv("ADMIN_PASSWORD", ""),
+  adminEmail: () => getOptionalEnv("ADMIN_EMAIL", "admin@example.com"),
+  adminName: () => getOptionalEnv("ADMIN_NAME", "Admin"),
   cronSecret: () => getOptionalEnv("CRON_SECRET", ""),
   resendApiKey: () => getOptionalEnv("RESEND_API_KEY", ""),
   alertEmails: () => getOptionalEnv("ALERT_EMAILS", ""),

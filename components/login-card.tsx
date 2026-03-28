@@ -1,7 +1,9 @@
 "use client";
 
-import { Activity } from "lucide-react";
+import { useState } from "react";
+import { Activity, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -10,30 +12,37 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-const ERROR_MESSAGES: Record<string, string> = {
-  no_code: "Authorization code was not provided.",
-  missing_config:
-    "OAuth is not configured. Set NEXT_PUBLIC_VERCEL_APP_CLIENT_ID and VERCEL_APP_CLIENT_SECRET.",
-  state_mismatch: "Security validation failed (state mismatch). Please try again.",
-  nonce_mismatch: "Security validation failed (nonce mismatch). Please try again.",
-  token_exchange_failed: "Failed to exchange authorization code.",
-  user_fetch_failed: "Failed to fetch user profile.",
-  no_email: "No email associated with your Vercel account.",
-  not_allowed: "Your email is not on the allowed list. Contact the admin.",
-  unexpected: "An unexpected error occurred. Please try again.",
-};
+export function LoginCard() {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-interface LoginCardProps {
-  clientId: string;
-  error?: string;
-}
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-export function LoginCard({ clientId, error }: LoginCardProps) {
-  const isConfigured = clientId.length > 0;
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
 
-  function handleSignIn() {
-    // Redirect to our server-side authorize route which handles PKCE and redirects to Vercel
-    window.location.href = "/api/auth/authorize";
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "登录失败");
+        return;
+      }
+
+      // 登录成功，重定向到仪表板
+      window.location.href = "/dashboard";
+    } catch (err) {
+      setError("网络错误，请重试");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -47,38 +56,43 @@ export function LoginCard({ clientId, error }: LoginCardProps) {
             系统监控
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            使用您的 Vercel 账户登录以访问控制台。
+            输入管理员密码以访问控制台
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {error && (
-            <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {ERROR_MESSAGES[error] ?? "An error occurred."}
+        <CardContent>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {error && (
+              <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </div>
+            )}
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium">
+                密码
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="请输入密码"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-9"
+                  required
+                  disabled={loading}
+                />
+              </div>
             </div>
-          )}
-          {!isConfigured && (
-            <div className="rounded-md bg-warning/10 px-3 py-2 text-sm text-warning">
-              OAuth 尚未配置。设置
-              NEXT_PUBLIC_VERCEL_APP_CLIENT_ID 环境变量以启用
-              登录功能。
-            </div>
-          )}
-          <Button
-            onClick={handleSignIn}
-            disabled={!isConfigured}
-            className="w-full bg-foreground text-background hover:bg-foreground/90"
-            size="lg"
-          >
-            <svg
-              className="mr-2 h-4 w-4"
-              viewBox="0 0 76 65"
-              fill="currentColor"
-              aria-hidden="true"
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-foreground text-background hover:bg-foreground/90"
+              size="lg"
             >
-              <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" />
-            </svg>
-            使用 Vercel 登录
-          </Button>
+              {loading ? "登录中..." : "登录"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
