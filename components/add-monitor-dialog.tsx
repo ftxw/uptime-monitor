@@ -29,14 +29,10 @@ interface AddMonitorDialogProps {
 }
 
 const INTERVAL_OPTIONS = [
-  { label: "每 1 分钟", value: "60" },
   { label: "每 5 分钟", value: "300" },
-  { label: "每 15 分钟", value: "900" },
+  { label: "每 10 分钟", value: "600" },
   { label: "每 30 分钟", value: "1800" },
   { label: "每 1 小时", value: "3600" },
-  { label: "每 6 小时", value: "21600" },
-  { label: "每 12 小时", value: "43200" },
-  { label: "每 24 小时", value: "86400" },
 ];
 
 export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
@@ -45,7 +41,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("https://");
   const [method, setMethod] = useState("GET");
-  const [interval, setInterval] = useState("3600");
+  const [interval, setInterval] = useState("300");
   const [timeout, setTimeout] = useState("30");
   const [expectedStatus, setExpectedStatus] = useState("200");
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +75,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
       setName("");
       setUrl("https://");
       setMethod("GET");
-      setInterval("3600");
+      setInterval("300");
       setTimeout("30");
       setExpectedStatus("200");
       setOpen(false);

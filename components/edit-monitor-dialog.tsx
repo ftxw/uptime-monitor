@@ -32,14 +32,10 @@ interface EditMonitorDialogProps {
 }
 
 const INTERVAL_OPTIONS = [
-  { label: "每 1 分钟", value: "60" },
   { label: "每 5 分钟", value: "300" },
-  { label: "每 15 分钟", value: "900" },
+  { label: "每 10 分钟", value: "600" },
   { label: "每 30 分钟", value: "1800" },
   { label: "每 1 小时", value: "3600" },
-  { label: "每 6 小时", value: "21600" },
-  { label: "每 12 小时", value: "43200" },
-  { label: "每 24 小时", value: "86400" },
 ];
 
 export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
