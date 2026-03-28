@@ -33,7 +33,7 @@ export function StatCards({ stats }: StatCardsProps) {
       iconClass: "text-destructive bg-destructive/10",
     },
     {
-      label: "24小时运行率",
+      label: "运行率",
       value: `${stats.overall_uptime_24h.toFixed(1)}%`,
       icon: Shield,
       iconClass: "text-primary bg-primary/10",

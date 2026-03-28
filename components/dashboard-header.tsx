@@ -47,7 +47,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="hidden sm:inline">{user.name}</span>
+                <span className="hidden sm:inline">{user.name || "User"}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

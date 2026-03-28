@@ -94,9 +94,9 @@ export function MonitorTable({ monitors, onDelete }: MonitorTableProps) {
               </div>
 
               {/* Response time */}
-              <div className="flex items-center gap-6 text-sm lg:w-48 lg:justify-end">
-                <div className="flex flex-col items-start lg:items-end">
-                  <span className="text-xs text-muted-foreground">
+              <div className="flex items-center gap-6 text-sm lg:w-64 lg:justify-end">
+                <div className="flex flex-col items-start lg:items-end min-w-0">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
                     响应时间
                   </span>
                   <span className="font-mono text-card-foreground">
@@ -108,11 +108,11 @@ export function MonitorTable({ monitors, onDelete }: MonitorTableProps) {
 
                 {/* SSL */}
                 {monitor.url.startsWith("https://") && (
-                  <div className="flex flex-col items-start lg:items-end">
-                    <span className="text-xs text-muted-foreground">SSL</span>
+                  <div className="flex flex-col items-start lg:items-end min-w-0">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">SSL</span>
                     <span className="flex items-center gap-1 font-mono text-card-foreground">
                       <Shield
-                        className={`h-3 w-3 ${monitor.latest_check?.ssl_valid
+                        className={`h-3 w-3 shrink-0 ${monitor.latest_check?.ssl_valid
                             ? "text-success"
                             : monitor.latest_check?.ssl_valid === false
                               ? "text-destructive"
@@ -127,9 +127,9 @@ export function MonitorTable({ monitors, onDelete }: MonitorTableProps) {
                 )}
 
                 {/* Uptime % */}
-                <div className="flex flex-col items-start lg:items-end">
-                  <span className="text-xs text-muted-foreground">
-                    24小时运行时间
+                <div className="flex flex-col items-start lg:items-end min-w-0">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    运行率
                   </span>
                   <span className="font-mono text-card-foreground">
                     {monitor.uptime_24h !== null

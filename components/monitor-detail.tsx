@@ -273,12 +273,12 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span>
-                      Started:{" "}
+                      开始时间：{" "}
                       {new Date(incident.started_at).toLocaleString()}
                     </span>
                     {incident.resolved_at && (
                       <span>
-                        Resolved:{" "}
+                        解决时间：{" "}
                         {new Date(incident.resolved_at).toLocaleString()}
                       </span>
                     )}
