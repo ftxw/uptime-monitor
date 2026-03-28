@@ -4,13 +4,11 @@ import type { UserSession } from "./types";
 /**
  * Authentication helpers using simple password-based auth.
  *
- * Uses a simple session cookie containing user's email and name.
+ * Uses a simple session cookie.
  * The ADMIN_PASSWORD environment variable is used for authentication.
  *
  * Setup:
- * 1. Set ADMIN_PASSWORD env var (e.g., "your-secure-password")
- * 2. Optionally set ADMIN_EMAIL (default: "admin@example.com")
- * 3. Optionally set ADMIN_NAME (default: "Admin")
+ * Set ADMIN_PASSWORD env var (e.g., "your-secure-password")
  */
 
 const SESSION_COOKIE = "uptime_session";
@@ -28,8 +26,13 @@ export function isAdminPassword(password: string): boolean {
 /**
  * Encode session data and set it as an HTTP-only cookie.
  */
-export async function setSession(user: UserSession): Promise<void> {
+export async function setSession(): Promise<void> {
   const cookieStore = await cookies();
+  const user: UserSession = {
+    email: "admin",
+    name: "Admin",
+    avatar_url: null,
+  };
   const value = Buffer.from(JSON.stringify(user)).toString("base64");
   cookieStore.set(SESSION_COOKIE, value, {
     httpOnly: true,
@@ -50,8 +53,8 @@ export async function setSession(user: UserSession): Promise<void> {
 export async function getSession(): Promise<UserSession | null> {
   if (process.env.BYPASS_AUTH === "true") {
     return {
-      email: process.env.ADMIN_EMAIL || "admin@example.com",
-      name: process.env.ADMIN_NAME || "Admin",
+      email: "admin",
+      name: "Admin",
       avatar_url: null,
     };
   }

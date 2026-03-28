@@ -40,8 +40,6 @@ export function validateEnv(): void {
 export const env = {
   databaseUrl: () => getRequiredEnv("DATABASE_URL"),
   adminPassword: () => getOptionalEnv("ADMIN_PASSWORD", ""),
-  adminEmail: () => getOptionalEnv("ADMIN_EMAIL", "admin@example.com"),
-  adminName: () => getOptionalEnv("ADMIN_NAME", "Admin"),
   cronSecret: () => getOptionalEnv("CRON_SECRET", ""),
   resendApiKey: () => getOptionalEnv("RESEND_API_KEY", ""),
   alertEmails: () => getOptionalEnv("ALERT_EMAILS", ""),
