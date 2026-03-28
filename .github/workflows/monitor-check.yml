@@ -15,7 +15,8 @@ jobs:
     steps:
       - name: 调用 /api/check 端点
         run: |
-          curl -X POST ${{ secrets.SITE_URL }}/api/check \
+          echo "开始调用 API..."
+          curl -v -X POST ${{ secrets.SITE_URL }}/api/check \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             --max-time 30
