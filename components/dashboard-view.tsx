@@ -35,7 +35,7 @@ export function DashboardView() {
     { refreshInterval: 60000 }
   );
 
-  const { data: categories } = useSWR<Category[]>(
+  const { data: categories, mutate: mutateCategories } = useSWR<Category[]>(
     "/api/categories",
     fetcher,
     { refreshInterval: 120000 }
@@ -59,13 +59,13 @@ export function DashboardView() {
 
   function handleAddCategory(category: Category) {
     if (categories) {
-      mutate([...categories, category], false);
+      mutateCategories([...categories, category], false);
     }
   }
 
   function handleDeleteCategory(id: string) {
     if (categories) {
-      mutate("/api/categories", categories.filter((c) => c.id !== id), false);
+      mutateCategories(categories.filter((c) => c.id !== id), false);
     }
   }
 
