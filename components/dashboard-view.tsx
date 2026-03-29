@@ -59,13 +59,13 @@ export function DashboardView() {
 
   function handleAddCategory(category: Category) {
     if (categories) {
-      mutateCategories([...categories, category], false);
+      mutateCategories([...categories, category]);
     }
   }
 
   function handleDeleteCategory(id: string) {
     if (categories) {
-      mutateCategories(categories.filter((c) => c.id !== id), false);
+      mutateCategories(categories.filter((c) => c.id !== id));
     }
   }
 

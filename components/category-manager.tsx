@@ -10,7 +10,7 @@ import type { Category } from "@/lib/types";
 
 interface CategoryManagerProps {
   categories: Category[];
-  onAddCategory: (name: string) => void;
+  onAddCategory: (category: Category) => void;
   onDeleteCategory: (id: string) => void;
 }
 
