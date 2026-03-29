@@ -10,12 +10,12 @@ interface UptimeBarProps {
 }
 
 /**
- * 一个可视化的条形图，显示最近 30 次检查结果为彩色段。
+ * 一个可视化的条形图，显示最近 30 天的检查结果为彩色段。
  * 绿色 = 正常，红色 = 离线，黄色 = 降级，灰色 = 无数据。
  */
 export function UptimeBar({ monitorId }: UptimeBarProps) {
   const { data: checks } = useSWR<CheckResult[]>(
-    `/api/monitors/${monitorId}/checks?limit=30`,
+    `/api/monitors/${monitorId}/checks/daily?days=30`,
     fetcher,
     { refreshInterval: 120000 }
   );
@@ -39,7 +39,7 @@ export function UptimeBar({ monitorId }: UptimeBarProps) {
             className={`h-6 flex-1 rounded-sm ${colorClass}`}
             title={
               check
-                ? `${check.status} - ${new Date(check.checked_at).toLocaleString()}`
+                ? `${check.status === 'up' ? '正常' : check.status === 'down' ? '故障' : '降级'} - ${new Date(check.checked_at).toLocaleDateString()}`
                 : "无数据"
             }
           />

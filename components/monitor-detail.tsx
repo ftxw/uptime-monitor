@@ -189,7 +189,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
       <Card className="bg-card">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-medium text-card-foreground">
-            运行时间历史（最近30次检查）
+            运行时间历史（最近30天）
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -214,7 +214,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {checks.slice(0, 20).map((check) => (
+              {checks.slice(0, 10).map((check) => (
                 <div
                   key={check.id}
                   className="flex items-center gap-4 px-4 py-3 text-sm sm:px-6"

@@ -122,6 +122,21 @@ export async function getCheckResults(
   return rows as CheckResult[];
 }
 
+export async function getDailyCheckResults(
+  monitorId: string,
+  days = 30
+): Promise<CheckResult[]> {
+  const sql = getDb();
+  const rows = await sql`
+    SELECT DISTINCT ON (DATE(checked_at)) *
+    FROM check_results
+    WHERE monitor_id = ${monitorId}
+      AND checked_at >= NOW() - INTERVAL '${days} days'
+    ORDER BY DATE(checked_at) DESC, checked_at DESC
+  `;
+  return rows as CheckResult[];
+}
+
 export async function getCheckResultsInRange(
   monitorId: string,
   startDate: Date,
