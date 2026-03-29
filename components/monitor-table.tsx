@@ -78,130 +78,134 @@ export function MonitorTable({ monitors, categories, onDelete }: MonitorTablePro
               <CardContent className="p-0">
                 <div className="divide-y divide-border">
                   {categoryMonitors.map((monitor) => (
-            <div
-              key={monitor.id}
-              className="flex flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:gap-6"
-            >
-              {/* Name + URL */}
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/dashboard/monitors/${monitor.id}`}
-                    className="truncate font-medium text-card-foreground hover:text-primary"
-                  >
-                    {monitor.name}
-                  </Link>
-                  <StatusBadge
-                    status={monitor.latest_check?.status ?? "unknown"}
-                    size="sm"
-                  />
-                </div>
-                <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1 truncate font-mono">
-                    <Globe className="h-3 w-3 shrink-0" />
-                    {monitor.url}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {formatInterval(monitor.check_interval_seconds)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Uptime bar */}
-              <div className="hidden w-48 lg:block">
-                <UptimeBar monitorId={monitor.id} />
-              </div>
-
-              {/* Response time */}
-              <div className="flex items-center gap-6 text-sm lg:w-64 lg:justify-end">
-                <div className="flex flex-col items-start lg:items-end min-w-0">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    响应时间
-                  </span>
-                  <span className="font-mono text-card-foreground">
-                    {formatResponseTime(
-                      monitor.latest_check?.response_time_ms ?? null
-                    )}
-                  </span>
-                </div>
-
-                {/* SSL */}
-                {monitor.url.startsWith("https://") && (
-                  <div className="flex flex-col items-start lg:items-end min-w-0">
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">SSL</span>
-                    <span className="flex items-center gap-1 font-mono text-card-foreground">
-                      <Shield
-                        className={`h-3 w-3 shrink-0 ${monitor.latest_check?.ssl_valid
-                            ? "text-success"
-                            : monitor.latest_check?.ssl_valid === false
-                              ? "text-destructive"
-                              : "text-muted-foreground"
-                          }`}
-                      />
-                      {monitor.latest_check?.ssl_days_remaining != null
-                        ? `${monitor.latest_check.ssl_days_remaining}天`
-                        : "--"}
-                    </span>
-                  </div>
-                )}
-
-                {/* Uptime % */}
-                <div className="flex flex-col items-start lg:items-end min-w-0">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    运行率
-                  </span>
-                  <span className="font-mono text-card-foreground">
-                    {monitor.uptime_24h !== null
-                      ? `${monitor.uptime_24h.toFixed(1)}%`
-                      : "--"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground"
+                    <div
+                      key={monitor.id}
+                      className="flex flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:gap-6"
                     >
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">操作</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href={`/dashboard/monitors/${monitor.id}`}>
-                        查看详情
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <a
-                        href={monitor.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        打开链接
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onClick={() => onDelete(monitor.id)}
-                    >
-                      删除
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
+                      {/* Name + URL */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/dashboard/monitors/${monitor.id}`}
+                            className="truncate font-medium text-card-foreground hover:text-primary"
+                          >
+                            {monitor.name}
+                          </Link>
+                          <StatusBadge
+                            status={monitor.latest_check?.status ?? "unknown"}
+                            size="sm"
+                          />
+                        </div>
+                        <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1 truncate font-mono">
+                            <Globe className="h-3 w-3 shrink-0" />
+                            {monitor.url}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {formatInterval(monitor.check_interval_seconds)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Uptime bar */}
+                      <div className="hidden w-48 lg:block">
+                        <UptimeBar monitorId={monitor.id} />
+                      </div>
+
+                      {/* Response time */}
+                      <div className="flex items-center gap-6 text-sm lg:w-64 lg:justify-end">
+                        <div className="flex flex-col items-start lg:items-end min-w-0">
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            响应时间
+                          </span>
+                          <span className="font-mono text-card-foreground">
+                            {formatResponseTime(
+                              monitor.latest_check?.response_time_ms ?? null
+                            )}
+                          </span>
+                        </div>
+
+                        {/* SSL */}
+                        {monitor.url.startsWith("https://") && (
+                          <div className="flex flex-col items-start lg:items-end min-w-0">
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">SSL</span>
+                            <span className="flex items-center gap-1 font-mono text-card-foreground">
+                              <Shield
+                                className={`h-3 w-3 shrink-0 ${monitor.latest_check?.ssl_valid
+                                    ? "text-success"
+                                    : monitor.latest_check?.ssl_valid === false
+                                      ? "text-destructive"
+                                      : "text-muted-foreground"
+                                }`}
+                              />
+                              {monitor.latest_check?.ssl_days_remaining != null
+                                ? `${monitor.latest_check.ssl_days_remaining}天`
+                                : "--"}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Uptime % */}
+                        <div className="flex flex-col items-start lg:items-end min-w-0">
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            运行率
+                          </span>
+                          <span className="font-mono text-card-foreground">
+                            {monitor.uptime_24h !== null
+                              ? `${monitor.uptime_24h.toFixed(1)}%`
+                              : "--"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">操作</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/dashboard/monitors/${monitor.id}`}>
+                                查看详情
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <a
+                                href={monitor.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2"
+                              >
+                                打开链接
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => onDelete(monitor.id)}
+                            >
+                              删除
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  }
 }
