@@ -2,6 +2,12 @@
  * Core types for the Uptime Monitor application.
  */
 
+export interface Category {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
 export interface Monitor {
   id: string;
   name: string;
@@ -11,6 +17,7 @@ export interface Monitor {
   timeout_seconds: number;
   expected_status_code: number;
   is_active: boolean;
+  category_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -76,6 +83,7 @@ export interface MonitorFormData {
   timeout_seconds: number;
   expected_status_code: number;
   is_active: boolean;
+  category_id: string | null;
 }
 
 /** Authenticated user session */

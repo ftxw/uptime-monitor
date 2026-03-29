@@ -1,6 +1,13 @@
 -- Uptime Monitor Database Schema
 -- This script creates all tables needed for the uptime monitoring service.
 
+-- Categories table: stores monitor categories
+CREATE TABLE IF NOT EXISTS categories (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Monitors table: stores the endpoints to monitor
 CREATE TABLE IF NOT EXISTS monitors (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -11,6 +18,7 @@ CREATE TABLE IF NOT EXISTS monitors (
   timeout_seconds INTEGER NOT NULL DEFAULT 30,
   expected_status_code INTEGER NOT NULL DEFAULT 200,
   is_active BOOLEAN NOT NULL DEFAULT true,
+  category_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -58,3 +66,4 @@ CREATE INDEX IF NOT EXISTS idx_check_results_monitor_checked ON check_results(mo
 CREATE INDEX IF NOT EXISTS idx_incidents_monitor_id ON incidents(monitor_id);
 CREATE INDEX IF NOT EXISTS idx_incidents_status ON incidents(status);
 CREATE INDEX IF NOT EXISTS idx_alert_log_incident_id ON alert_log(incident_id);
+CREATE INDEX IF NOT EXISTS idx_monitors_category_id ON monitors(category_id);

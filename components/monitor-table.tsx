@@ -12,10 +12,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { StatusBadge } from "@/components/status-badge";
 import { UptimeBar } from "@/components/uptime-bar";
-import type { MonitorWithStatus } from "@/lib/types";
+import type { MonitorWithStatus, Category } from "@/lib/types";
 
 interface MonitorTableProps {
   monitors: MonitorWithStatus[];
+  categories: Category[];
   onDelete: (id: string) => void;
 }
 
@@ -31,7 +32,7 @@ function formatInterval(seconds: number): string {
   return `${Math.round(seconds / 3600)}h`;
 }
 
-export function MonitorTable({ monitors, onDelete }: MonitorTableProps) {
+export function MonitorTable({ monitors, categories, onDelete }: MonitorTableProps) {
     if (monitors.length === 0) {
       return (
         <Card className="bg-card">
@@ -48,16 +49,35 @@ export function MonitorTable({ monitors, onDelete }: MonitorTableProps) {
       );
     }
 
-  return (
-    <Card className="bg-card">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-medium text-card-foreground">
-          监控列表
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="divide-y divide-border">
-          {monitors.map((monitor) => (
+    // Group monitors by category
+    const monitorsByCategory = new Map<string | null, MonitorWithStatus[]>();
+    monitors.forEach((monitor) => {
+      const key = monitor.category_id || null;
+      if (!monitorsByCategory.has(key)) {
+        monitorsByCategory.set(key, []);
+      }
+      monitorsByCategory.get(key)!.push(monitor);
+    });
+
+    const categoryIds = Array.from(monitorsByCategory.keys());
+
+    return (
+      <div className="flex flex-col gap-4">
+        {categoryIds.map((categoryId) => {
+          const category = categories.find((c) => c.id === categoryId);
+          const categoryMonitors = monitorsByCategory.get(categoryId)!;
+          const categoryName = category ? category.name : "未分类";
+
+          return (
+            <Card key={categoryId || "uncategorized"} className="bg-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-medium text-card-foreground">
+                  {categoryName} ({categoryMonitors.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-border">
+                  {categoryMonitors.map((monitor) => (
             <div
               key={monitor.id}
               className="flex flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:gap-6"

@@ -3,7 +3,8 @@
 import React from "react"
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import useSWR from "swr";
+import { Plus, Plus as PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { Category } from "@/lib/types";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface AddMonitorDialogProps {
   onAdd: () => void;
@@ -44,7 +48,12 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
   const [interval, setInterval] = useState("300");
   const [timeout, setTimeout] = useState("30");
   const [expectedStatus, setExpectedStatus] = useState("200");
+  const [categoryId, setCategoryId] = useState<string>(""); // Default: no category
   const [error, setError] = useState<string | null>(null);
+
+  const { data: categories } = useSWR<Category[]>("/api/categories", fetcher, {
+    refreshInterval: 120000,
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -62,6 +71,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
           check_interval_seconds: parseInt(interval, 10),
           timeout_seconds: parseInt(timeout, 10),
           expected_status_code: parseInt(expectedStatus, 10),
+          category_id: categoryId || null,
         }),
       });
 
@@ -78,6 +88,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
       setInterval("300");
       setTimeout("30");
       setExpectedStatus("200");
+      setCategoryId("");
       setOpen(false);
       onAdd();
     } catch {
@@ -120,6 +131,23 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
               required
               className="bg-background"
             />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="category">分类</Label>
+            <Select value={categoryId} onValueChange={setCategoryId}>
+              <SelectTrigger id="category" className="bg-background">
+                <SelectValue placeholder="无分类" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">无分类</SelectItem>
+                {categories?.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex flex-col gap-2">

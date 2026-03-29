@@ -5,12 +5,38 @@ import type {
   Incident,
   MonitorWithStatus,
   DashboardStats,
+  Category,
 } from "./types";
 
 /**
  * Database query functions for the uptime monitor.
  * All functions use parameterized queries to prevent SQL injection.
  */
+
+// ---------------------------------------------------------------------------
+// Categories
+// ---------------------------------------------------------------------------
+
+export async function getCategories(): Promise<Category[]> {
+  const sql = getDb();
+  const rows = await sql`SELECT * FROM categories ORDER BY name ASC`;
+  return rows as Category[];
+}
+
+export async function createCategory(name: string): Promise<Category> {
+  const sql = getDb();
+  const rows = await sql`
+    INSERT INTO categories (name)
+    VALUES (${name})
+    RETURNING *
+  `;
+  return rows[0] as Category;
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  const sql = getDb();
+  await sql`DELETE FROM categories WHERE id = ${id}`;
+}
 
 // ---------------------------------------------------------------------------
 // Monitors
@@ -41,11 +67,12 @@ export async function createMonitor(data: {
   check_interval_seconds: number;
   timeout_seconds: number;
   expected_status_code: number;
+  category_id: string | null;
 }): Promise<Monitor> {
   const sql = getDb();
   const rows = await sql`
-    INSERT INTO monitors (name, url, method, check_interval_seconds, timeout_seconds, expected_status_code)
-    VALUES (${data.name}, ${data.url}, ${data.method}, ${data.check_interval_seconds}, ${data.timeout_seconds}, ${data.expected_status_code})
+    INSERT INTO monitors (name, url, method, check_interval_seconds, timeout_seconds, expected_status_code, category_id)
+    VALUES (${data.name}, ${data.url}, ${data.method}, ${data.check_interval_seconds}, ${data.timeout_seconds}, ${data.expected_status_code}, ${data.category_id})
     RETURNING *
   `;
   return rows[0] as Monitor;
@@ -61,6 +88,7 @@ export async function updateMonitor(
     timeout_seconds: number;
     expected_status_code: number;
     is_active: boolean;
+    category_id: string | null;
   }
 ): Promise<Monitor> {
   const sql = getDb();
@@ -73,6 +101,7 @@ export async function updateMonitor(
       timeout_seconds = ${data.timeout_seconds},
       expected_status_code = ${data.expected_status_code},
       is_active = ${data.is_active},
+      category_id = ${data.category_id},
       updated_at = now()
     WHERE id = ${id}
     RETURNING *

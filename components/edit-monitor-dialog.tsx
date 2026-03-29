@@ -3,6 +3,7 @@
 import React from "react"
 
 import { useState } from "react";
+import useSWR from "swr";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +25,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import type { Monitor } from "@/lib/types";
+import type { Monitor, Category } from "@/lib/types";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface EditMonitorDialogProps {
   monitor: Monitor;
@@ -52,7 +55,12 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
     String(monitor.expected_status_code)
   );
   const [isActive, setIsActive] = useState(monitor.is_active);
+  const [categoryId, setCategoryId] = useState<string>(monitor.category_id || "");
   const [error, setError] = useState<string | null>(null);
+
+  const { data: categories } = useSWR<Category[]>("/api/categories", fetcher, {
+    refreshInterval: 120000,
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -71,6 +79,7 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
           timeout_seconds: parseInt(timeout, 10),
           expected_status_code: parseInt(expectedStatus, 10),
           is_active: isActive,
+          category_id: categoryId || null,
         }),
       });
 
@@ -121,6 +130,23 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
               required
               className="bg-background"
             />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="edit-category">分类</Label>
+            <Select value={categoryId} onValueChange={setCategoryId}>
+              <SelectTrigger id="edit-category" className="bg-background">
+                <SelectValue placeholder="无分类" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">无分类</SelectItem>
+                {categories?.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex flex-col gap-2">
