@@ -55,7 +55,7 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
     String(monitor.expected_status_code)
   );
   const [isActive, setIsActive] = useState(monitor.is_active);
-  const [categoryId, setCategoryId] = useState<string>(monitor.category_id || "");
+  const [categoryId, setCategoryId] = useState<string>(monitor.category_id || "none");
   const [error, setError] = useState<string | null>(null);
 
   const { data: categories } = useSWR<Category[]>("/api/categories", fetcher, {
@@ -79,7 +79,7 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
           timeout_seconds: parseInt(timeout, 10),
           expected_status_code: parseInt(expectedStatus, 10),
           is_active: isActive,
-          category_id: categoryId || null,
+          category_id: categoryId === "none" ? null : categoryId,
         }),
       });
 
@@ -139,7 +139,7 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
                 <SelectValue placeholder="无分类" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">无分类</SelectItem>
+                <SelectItem value="none">无分类</SelectItem>
                 {categories?.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
                     {cat.name}

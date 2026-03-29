@@ -48,7 +48,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
   const [interval, setInterval] = useState("300");
   const [timeout, setTimeout] = useState("30");
   const [expectedStatus, setExpectedStatus] = useState("200");
-  const [categoryId, setCategoryId] = useState<string>(""); // Default: no category
+  const [categoryId, setCategoryId] = useState<string>("none"); // Default: no category
   const [error, setError] = useState<string | null>(null);
 
   const { data: categories } = useSWR<Category[]>("/api/categories", fetcher, {
@@ -71,7 +71,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
           check_interval_seconds: parseInt(interval, 10),
           timeout_seconds: parseInt(timeout, 10),
           expected_status_code: parseInt(expectedStatus, 10),
-          category_id: categoryId || null,
+          category_id: categoryId === "none" ? null : categoryId,
         }),
       });
 
@@ -140,7 +140,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
                 <SelectValue placeholder="无分类" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">无分类</SelectItem>
+                <SelectItem value="none">无分类</SelectItem>
                 {categories?.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
                     {cat.name}
