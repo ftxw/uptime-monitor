@@ -115,6 +115,7 @@ export async function POST(request: Request) {
       check_interval_seconds: checkInterval,
       timeout_seconds: timeout,
       expected_status_code: statusCode,
+      category_id: body.category_id || null,
     });
 
     return NextResponse.json(monitor, { status: 201 });
