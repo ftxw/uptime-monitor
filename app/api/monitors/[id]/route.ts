@@ -134,6 +134,7 @@ export async function PUT(
       timeout_seconds: timeout,
       expected_status_code: statusCode,
       is_active: body.is_active ?? existing.is_active,
+      category_id: body.category_id ?? existing.category_id ?? null,
     });
 
     return NextResponse.json(updated);
