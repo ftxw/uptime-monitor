@@ -43,13 +43,13 @@ export function ResponseTimeChart({ monitorId }: ResponseTimeChartProps) {
     <Card className="bg-card">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-medium text-card-foreground">
-          Response Time
+          响应时间趋势
         </CardTitle>
       </CardHeader>
       <CardContent>
         {chartData.length === 0 ? (
           <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
-            No check data yet. Data will appear after the first check.
+            暂无检查数据。首次检查后将显示数据。
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={240}>
@@ -85,7 +85,7 @@ export function ResponseTimeChart({ monitorId }: ResponseTimeChartProps) {
                   color: "hsl(210, 20%, 95%)",
                   fontSize: "12px",
                 }}
-                formatter={(value: number) => [`${value}ms`, "Response Time"]}
+                formatter={(value: number) => [`${value}ms`, "响应时间"]}
               />
               <Area
                 type="monotone"
