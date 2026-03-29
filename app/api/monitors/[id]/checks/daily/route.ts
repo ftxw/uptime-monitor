@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDailyCheckResults, getMonitorById } from "@/lib/queries";
+import type { CheckResult } from "@/lib/types";
 
 /**
  * GET /api/monitors/:id/checks/daily - Get daily check results for a monitor
@@ -25,7 +26,7 @@ export async function GET(
     const url = new URL(request.url);
     const days = parseInt(url.searchParams.get("days") || "30", 10);
 
-    let checks = [];
+    let checks: CheckResult[] = [];
     try {
       checks = await getDailyCheckResults(id, Math.min(days, 90));
     } catch (dbError) {
