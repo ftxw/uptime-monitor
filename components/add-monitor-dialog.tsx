@@ -4,7 +4,7 @@ import React from "react"
 
 import { useState } from "react";
 import useSWR from "swr";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,12 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import type { Category } from "@/lib/types";
+import { CategoryManager } from "@/components/category-manager";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -55,9 +51,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
   const [expectedStatus, setExpectedStatus] = useState("200");
   const [categoryId, setCategoryId] = useState<string>("none");
   const [error, setError] = useState<string | null>(null);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [showCategoryPopover, setShowCategoryPopover] = useState(false);
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
 
   const { data: categories, mutate: mutateCategories } = useSWR<Category[]>(
     "/api/categories",
@@ -108,35 +102,16 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
     }
   }
 
-  async function handleAddCategory() {
-    if (!newCategoryName.trim()) return;
-
-    setIsAddingCategory(true);
-    try {
-      const res = await fetch("/api/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newCategoryName.trim() }),
-      });
-
-      if (res.ok) {
-        const newCategory = await res.json();
-        mutateCategories();
-        setCategoryId(newCategory.id);
-        setNewCategoryName("");
-        setShowCategoryPopover(false);
-      }
-    } catch {
-      setError("创建分类失败");
-    } finally {
-      setIsAddingCategory(false);
-    }
+  function handleAddCategory(category: Category) {
+    mutateCategories();
+    setCategoryId(category.id);
+    setShowCategoryDialog(false);
   }
 
-  function handleCategoryKeyPress(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddCategory();
+  function handleDeleteCategory(id: string) {
+    mutateCategories();
+    if (categoryId === id) {
+      setCategoryId("none");
     }
   }
 
@@ -191,36 +166,15 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
                   ))}
                 </SelectContent>
               </Select>
-              <Popover open={showCategoryPopover} onOpenChange={setShowCategoryPopover}>
-                <PopoverTrigger asChild>
-                  <Button type="button" variant="outline" size="icon" className="h-9 w-9 shrink-0">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="new-category">新分类名称</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="new-category"
-                        placeholder="输入分类名称"
-                        value={newCategoryName}
-                        onChange={(e) => setNewCategoryName(e.target.value)}
-                        onKeyPress={handleCategoryKeyPress}
-                        className="bg-background flex-1"
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleAddCategory}
-                        disabled={isAddingCategory || !newCategoryName.trim()}
-                        size="sm"
-                      >
-                        添加
-                      </Button>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                onClick={() => setShowCategoryDialog(true)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
             </div>
           </div>
 
@@ -311,6 +265,25 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Category Manager Dialog */}
+      <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
+        <DialogContent className="bg-card text-card-foreground max-w-md">
+          <DialogHeader>
+            <DialogTitle>分类管理</DialogTitle>
+            <DialogDescription>
+              添加或删除监控分类。
+            </DialogDescription>
+          </DialogHeader>
+          {categories && (
+            <CategoryManager
+              categories={categories}
+              onAddCategory={handleAddCategory}
+              onDeleteCategory={handleDeleteCategory}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
