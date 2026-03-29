@@ -24,13 +24,20 @@ export async function POST(request: NextRequest) {
     // 执行调度周期
     const result = await runSchedulerCycle();
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: `Checked ${result.checkedCount} monitor(s)` +
                (result.errors > 0 ? `, ${result.errors} error(s)` : ""),
       checked: result.checkedCount,
       errors: result.errors,
     });
+
+    // 添加 CORS 响应头（支持跨域请求）
+    response.headers.set("Access-Control-Allow-Origin", "*");
+    response.headers.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+    response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+    return response;
   } catch (error) {
     console.error("[API] Error in check endpoint:", error);
     return NextResponse.json(
@@ -41,6 +48,19 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * OPTIONS /api/check
+ *
+ * 处理 CORS 预检请求
+ */
+export async function OPTIONS() {
+  const response = new NextResponse(null, { status: 204 });
+  response.headers.set("Access-Control-Allow-Origin", "*");
+  response.headers.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  return response;
 }
 
 /**
@@ -60,12 +80,17 @@ export async function GET(request: NextRequest) {
 
     const result = await runSchedulerCycle();
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: `Checked ${result.checkedCount} monitor(s)`,
       checked: result.checkedCount,
       errors: result.errors,
     });
+
+    // 添加 CORS 响应头
+    response.headers.set("Access-Control-Allow-Origin", "*");
+
+    return response;
   } catch (error) {
     console.error("[API] Error in check endpoint:", error);
     return NextResponse.json(
