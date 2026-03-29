@@ -24,9 +24,18 @@ export async function GET(
 
     const url = new URL(request.url);
     const days = parseInt(url.searchParams.get("days") || "30", 10);
-    const checks = await getDailyCheckResults(id, Math.min(days, 90));
 
-    return NextResponse.json(checks);
+    let checks = [];
+    try {
+      checks = await getDailyCheckResults(id, Math.min(days, 90));
+    } catch (dbError) {
+      console.error("Database error in getDailyCheckResults:", dbError);
+      // Return empty array on database error instead of 500
+      checks = [];
+    }
+
+    // Ensure we always return an array
+    return NextResponse.json(Array.isArray(checks) ? checks : []);
   } catch (error) {
     console.error("Error fetching daily check results:", error);
     return NextResponse.json(

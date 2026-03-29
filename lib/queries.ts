@@ -131,7 +131,7 @@ export async function getDailyCheckResults(
     SELECT DISTINCT ON (DATE(checked_at)) *
     FROM check_results
     WHERE monitor_id = ${monitorId}
-      AND checked_at >= NOW() - INTERVAL '${days} days'
+      AND checked_at >= NOW() - make_interval(days => ${days})
     ORDER BY DATE(checked_at) DESC, checked_at DESC
   `;
   return rows as CheckResult[];
