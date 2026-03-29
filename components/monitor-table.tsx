@@ -207,5 +207,4 @@ export function MonitorTable({ monitors, categories, onDelete }: MonitorTablePro
         })}
       </div>
     );
-  }
 }
