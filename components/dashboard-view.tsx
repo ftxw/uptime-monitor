@@ -59,7 +59,7 @@ export function DashboardView() {
 
   function handleAddCategory(category: Category) {
     if (categories) {
-      mutate("/api/categories", [...categories, category], false);
+      mutate([...categories, category], false);
     }
   }
 
