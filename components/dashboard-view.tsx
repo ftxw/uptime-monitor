@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { StatCards } from "@/components/stat-cards";
 import { MonitorTable } from "@/components/monitor-table";
 import { AddMonitorDialog } from "@/components/add-monitor-dialog";
-import { CategoryManager } from "@/components/category-manager";
 import type { MonitorWithStatus, DashboardStats, Category } from "@/lib/types";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -35,7 +34,7 @@ export function DashboardView() {
     { refreshInterval: 60000 }
   );
 
-  const { data: categories, mutate: mutateCategories } = useSWR<Category[]>(
+  const { data: categories } = useSWR<Category[]>(
     "/api/categories",
     fetcher,
     { refreshInterval: 120000 }
@@ -55,18 +54,6 @@ export function DashboardView() {
     if (!confirm("确定要删除此监控吗？")) return;
     await fetch(`/api/monitors/${id}`, { method: "DELETE" });
     mutate();
-  }
-
-  function handleAddCategory(category: Category) {
-    if (categories) {
-      mutateCategories([...categories, category]);
-    }
-  }
-
-  function handleDeleteCategory(id: string) {
-    if (categories) {
-      mutateCategories(categories.filter((c) => c.id !== id));
-    }
   }
 
   return (
@@ -107,13 +94,6 @@ export function DashboardView() {
 
       {/* Stats */}
       <StatCards stats={data?.stats ?? defaultStats} />
-
-      {/* Category Manager */}
-      <CategoryManager
-        categories={categories ?? []}
-        onAddCategory={handleAddCategory}
-        onDeleteCategory={handleDeleteCategory}
-      />
 
       {/* Monitor list */}
       <MonitorTable

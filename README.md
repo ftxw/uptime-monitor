@@ -11,6 +11,7 @@ A self-hosted uptime monitoring tool built with Next.js, Neon PostgreSQL, and Ve
 ## Features
 
 - **Endpoint Monitoring** - Add any HTTP/HTTPS endpoint with configurable check intervals (5 minutes to 24 hours), HTTP methods (GET/HEAD/POST), expected status codes, and timeout thresholds
+- **Category Organization** - Organize monitors into custom categories (e.g., "Web Services", "APIs", "Database"). Create categories directly when adding or editing monitors
 - **SSL Certificate Tracking** - Automatically checks SSL certificate validity and expiry for HTTPS endpoints. Marks monitors as "degraded" when certificates have fewer than 14 days remaining
 - **Response Time Charts** - Visualizes response time history using area charts built with Recharts, showing performance trends over time
 - **Uptime History Bar** - A compact 30-segment color bar showing the status of recent checks at a glance (green = up, red = down, amber = degraded)
@@ -104,6 +105,12 @@ Neon provides a serverless PostgreSQL database that works seamlessly with Vercel
    ```
 
 You should see messages confirming that tables and indexes were created.
+
+The setup script will automatically create:
+- **5 tables**: categories, monitors, check_results, incidents, alert_log
+- **All necessary indexes** for optimal query performance
+
+Categories are created by users when adding or editing monitors. Monitors without a category will display as "无分类".
 
 ---
 
@@ -337,6 +344,8 @@ app/
       authorize/route.ts   # Initiates OAuth PKCE flow
       callback/route.ts    # Handles OAuth callback
       signout/route.ts     # Revokes token and clears session
+    categories/
+      route.ts            # CRUD for categories (list/create/delete)
     cron/
       check/route.ts       # Vercel Cron endpoint (runs every 10 minutes)
     dashboard/route.ts    # Aggregated dashboard data
@@ -362,8 +371,9 @@ components/
   status-badge.tsx         # Color-coded status pill
   uptime-bar.tsx           # Visual uptime history bar
   response-time-chart.tsx  # Recharts response time area chart
-  add-monitor-dialog.tsx   # Dialog form to add a monitor
-  edit-monitor-dialog.tsx  # Dialog form to edit a monitor
+  add-monitor-dialog.tsx   # Dialog form to add a monitor (with category creation)
+  edit-monitor-dialog.tsx  # Dialog form to edit a monitor (with category creation)
+  category-manager.tsx      # Category management UI (legacy, now integrated in dialogs)
   login-card.tsx           # Sign-in card with Vercel OAuth
 
 lib/
@@ -377,16 +387,17 @@ lib/
   env.ts                   # Environment variable validation
 
 scripts/
-  setup-database.sql       # Database schema (tables + indexes)
+  setup-database.sql       # Database schema (tables + indexes + default categories)
 ```
 
 ---
 
 ## Database Schema
 
-The app uses four tables:
+The app uses five tables:
 
-- **monitors** - Endpoint configurations (URL, method, interval, timeout, expected status)
+- **categories** - Monitor categories for organization (name, created_at)
+- **monitors** - Endpoint configurations (URL, method, interval, timeout, expected status, category_id)
 - **check_results** - Individual check results (status, response time, SSL info, errors)
 - **incidents** - Downtime incidents with start/resolve timestamps
 - **alert_log** - Record of every alert sent (channel, recipient, success/failure)
@@ -403,6 +414,9 @@ All tables use `gen_random_uuid()` for primary keys and include appropriate inde
 | GET    | `/api/auth/callback`           | Public   | OAuth callback handler               |
 | POST   | `/api/auth/signout`            | Session  | Sign out and revoke token            |
 | GET    | `/api/dashboard`               | Session  | Dashboard data (monitors + stats)    |
+| GET    | `/api/categories`              | Session  | List all categories                  |
+| POST   | `/api/categories`              | Session  | Create a new category                |
+| DELETE | `/api/categories/:id`          | Session  | Delete a category                   |
 | GET    | `/api/monitors`                | Session  | List all monitors                    |
 | POST   | `/api/monitors`                | Session  | Create a monitor                     |
 | GET    | `/api/monitors/:id`            | Session  | Get a single monitor                 |
@@ -445,6 +459,37 @@ If you encounter any issues or have questions:
 1. Check the [Troubleshooting](#troubleshooting) section above
 2. Review the Vercel, Neon, and Resend documentation
 3. Open an issue on GitHub
+
+---
+
+## Category Feature
+
+### Overview
+
+Categories allow you to organize your monitors into logical groups. This is especially useful when you have many monitors across different services, environments, or types.
+
+### Creating Categories
+
+Categories are created directly when adding or editing a monitor:
+
+1. Click **"Add Monitor"** or the **"Edit"** button on an existing monitor
+2. In the **"Category"** field, click the **"+"** button next to the dropdown
+3. Enter the new category name in the popover
+4. Press **Enter** or click **"Add"**
+5. The new category will be automatically selected and applied
+
+### Managing Monitors with Categories
+
+- **Assigning categories**: Select a category when creating or editing a monitor
+- **No category**: Monitors can exist without being assigned to any category
+- **Deleting a category**: When a category is deleted, all monitors in that category will have their `category_id` set to `NULL` (they won't be deleted)
+
+### Category Display
+
+Monitors are displayed grouped by category in the monitor list, making it easy to:
+- Quickly find monitors in a specific category
+- View the health of related services together
+- Organize large numbers of monitors
 
 ---
 

@@ -4,7 +4,7 @@ import React from "react"
 
 import { useState } from "react";
 import useSWR from "swr";
-import { Pencil } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import type { Monitor, Category } from "@/lib/types";
 
@@ -57,10 +62,15 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
   const [isActive, setIsActive] = useState(monitor.is_active);
   const [categoryId, setCategoryId] = useState<string>(monitor.category_id || "none");
   const [error, setError] = useState<string | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [showCategoryPopover, setShowCategoryPopover] = useState(false);
 
-  const { data: categories } = useSWR<Category[]>("/api/categories", fetcher, {
-    refreshInterval: 120000,
-  });
+  const { data: categories, mutate: mutateCategories } = useSWR<Category[]>(
+    "/api/categories",
+    fetcher,
+    { refreshInterval: 120000 }
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,6 +105,38 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
       setError("更新监控失败");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleAddCategory() {
+    if (!newCategoryName.trim()) return;
+
+    setIsAddingCategory(true);
+    try {
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newCategoryName.trim() }),
+      });
+
+      if (res.ok) {
+        const newCategory = await res.json();
+        mutateCategories();
+        setCategoryId(newCategory.id);
+        setNewCategoryName("");
+        setShowCategoryPopover(false);
+      }
+    } catch {
+      setError("创建分类失败");
+    } finally {
+      setIsAddingCategory(false);
+    }
+  }
+
+  function handleCategoryKeyPress(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddCategory();
     }
   }
 
@@ -134,19 +176,51 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="edit-category">分类</Label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger id="edit-category" className="bg-background">
-                <SelectValue placeholder="无分类" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">无分类</SelectItem>
-                {categories?.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger id="edit-category" className="bg-background flex-1">
+                  <SelectValue placeholder="无分类" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">无分类</SelectItem>
+                  {categories?.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Popover open={showCategoryPopover} onOpenChange={setShowCategoryPopover}>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline" size="icon" className="h-9 w-9 shrink-0">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-category">新分类名称</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="new-category"
+                        placeholder="输入分类名称"
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                        onKeyPress={handleCategoryKeyPress}
+                        className="bg-background flex-1"
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleAddCategory}
+                        disabled={isAddingCategory || !newCategoryName.trim()}
+                        size="sm"
+                      >
+                        添加
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
 
           <div className="flex flex-col gap-2">

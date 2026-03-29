@@ -1,5 +1,6 @@
 -- Uptime Monitor Database Schema
 -- This script creates all tables needed for the uptime monitoring service.
+-- Use this script for initial database setup only.
 
 -- Categories table: stores monitor categories
 CREATE TABLE IF NOT EXISTS categories (
@@ -22,6 +23,14 @@ CREATE TABLE IF NOT EXISTS monitors (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Add comment to tables
+COMMENT ON TABLE categories IS '存储监控分类';
+COMMENT ON TABLE monitors IS '存储监控端点配置';
+COMMENT ON TABLE check_results IS '存储检查结果';
+COMMENT ON TABLE incidents IS '存储故障事件';
+COMMENT ON TABLE alert_log IS '存储告警记录';
+COMMENT ON COLUMN monitors.category_id IS '关联的分类 ID，删除分类时设置为 NULL';
 
 -- Check results table: stores individual check results
 CREATE TABLE IF NOT EXISTS check_results (
@@ -67,3 +76,4 @@ CREATE INDEX IF NOT EXISTS idx_incidents_monitor_id ON incidents(monitor_id);
 CREATE INDEX IF NOT EXISTS idx_incidents_status ON incidents(status);
 CREATE INDEX IF NOT EXISTS idx_alert_log_incident_id ON alert_log(incident_id);
 CREATE INDEX IF NOT EXISTS idx_monitors_category_id ON monitors(category_id);
+CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name);
