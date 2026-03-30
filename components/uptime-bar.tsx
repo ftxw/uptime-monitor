@@ -51,7 +51,7 @@ function DayTooltip({ check, daysAgo }: DayTooltipProps) {
   let downtimeInfo: string | null = null;
 
   if (check.has_downtime && check.recovered) {
-    statusInfo = { label: "已恢复", color: "text-warning", bg: "bg-warning" };
+    statusInfo = { label: "已恢复", color: "text-pink", bg: "bg-pink" };
     if (check.downtime_minutes && check.downtime_minutes > 0) {
       downtimeInfo = `故障时长：${formatDuration(check.downtime_minutes)}`;
     }
@@ -86,7 +86,7 @@ function DayTooltip({ check, daysAgo }: DayTooltipProps) {
 
 /**
  * 一个可视化的条形图,显示最近 30 天的检查结果为彩色段。
- * 绿色 = 正常,红色 = 故障未恢复/全天故障,黄色 = 有故障但已恢复,灰色 = 无数据。
+ * 绿色 = 正常,红色 = 故障未恢复/全天故障,粉红色 = 有故障但已恢复,黄色 = 降级,灰色 = 无数据。
  */
 export function UptimeBar({ monitorId }: UptimeBarProps) {
   const { data: checks } = useSWR<CheckResult[]>(
@@ -96,18 +96,31 @@ export function UptimeBar({ monitorId }: UptimeBarProps) {
   );
 
   const segments = 30;
-  const results = checks ? [...checks].reverse() : [];
+  // 创建一个Map，键为日期字符串，值为对应的CheckResult
+  const checkMap = checks ? new Map(
+    checks.map(check => [
+      new Date(check.checked_at).toLocaleDateString(),
+      check
+    ])
+  ) : new Map();
 
   return (
     <div className="flex items-center gap-0.5" aria-label="运行历史">
       {Array.from({ length: segments }).map((_, i) => {
-        const check = results[i];
+        // 计算这个色块对应的日期
+        const daysAgo = segments - 1 - i;
+        const targetDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+        const targetDateStr = targetDate.toLocaleDateString();
+
+        // 根据日期查找对应的数据
+        const check = checkMap.get(targetDateStr);
+
         let colorClass = "bg-muted";
 
         if (check) {
-          // 优先判断是否有故障但已恢复(黄色)
+          // 优先判断是否有故障但已恢复(粉红色)
           if (check.has_downtime && check.recovered) {
-            colorClass = "bg-warning";
+            colorClass = "bg-pink";
           }
           // 故障未恢复或全天都是故障(红色)
           else if (check.status === "down" || (check.has_downtime && !check.recovered)) {
@@ -133,7 +146,7 @@ export function UptimeBar({ monitorId }: UptimeBarProps) {
               side="top"
               align="center"
             >
-              <DayTooltip check={check} daysAgo={segments - 1 - i} />
+              <DayTooltip check={check} daysAgo={daysAgo} />
             </HoverCardContent>
           </HoverCard>
         );
