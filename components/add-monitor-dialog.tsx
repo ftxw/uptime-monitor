@@ -96,7 +96,6 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
   function handleAddCategory(category: Category) {
     mutateCategories();
     setCategoryId(category.id);
-    setShowCategoryDialog(false);
   }
 
   function handleDeleteCategory(id: string) {
