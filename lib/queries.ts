@@ -157,23 +157,37 @@ export async function getDailyCheckResults(
 ): Promise<CheckResult[]> {
   const sql = getDb();
   const rows = await sql`
-    WITH daily_stats AS (
+    WITH daily_check AS (
       SELECT
         DATE(checked_at) as check_date,
-        MAX(status) FILTER (WHERE status = 'down') as had_down,
-        MAX(status) as latest_status,
-        COUNT(*) FILTER (WHERE status = 'down') as down_count
+        status as daily_status,
+        ROW_NUMBER() OVER (PARTITION BY DATE(checked_at) ORDER BY checked_at DESC) as rn
       FROM check_results
       WHERE monitor_id = ${monitorId}
         AND checked_at >= NOW() - make_interval(days => ${days})
-      GROUP BY DATE(checked_at)
+    ),
+    daily_with_down AS (
+      SELECT
+        dc.check_date,
+        dc.daily_status,
+        EXISTS (
+          SELECT 1 FROM check_results cr2
+          WHERE cr2.monitor_id = ${monitorId}
+            AND DATE(cr2.checked_at) = dc.check_date
+            AND cr2.status = 'down'
+        ) as has_downtime
+      FROM daily_check dc
+      WHERE dc.rn = 1
     )
     SELECT
       cr.*,
-      CASE WHEN ds.had_down IS NOT NULL THEN true ELSE false END as has_downtime,
-      CASE WHEN ds.had_down IS NOT NULL AND ds.latest_status = 'up' THEN true ELSE false END as recovered
+      dw.has_downtime,
+      CASE 
+        WHEN dw.has_downtime AND dw.daily_status = 'up' THEN true 
+        ELSE false 
+      END as recovered
     FROM check_results cr
-    INNER JOIN daily_stats ds ON DATE(cr.checked_at) = ds.check_date
+    INNER JOIN daily_with_down dw ON DATE(cr.checked_at) = dw.check_date
     WHERE cr.monitor_id = ${monitorId}
       AND cr.checked_at >= NOW() - make_interval(days => ${days})
     ORDER BY cr.checked_at DESC
