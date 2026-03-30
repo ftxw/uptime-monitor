@@ -33,6 +33,10 @@ export interface CheckResult {
   ssl_days_remaining: number | null;
   error_message: string | null;
   checked_at: string;
+  /** 当天是否有故障记录 */
+  has_downtime?: boolean;
+  /** 当天有故障但已恢复 */
+  recovered?: boolean;
 }
 
 export interface Incident {

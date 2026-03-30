@@ -157,13 +157,37 @@ export async function getDailyCheckResults(
 ): Promise<CheckResult[]> {
   const sql = getDb();
   const rows = await sql`
-    SELECT DISTINCT ON (DATE(checked_at)) *
-    FROM check_results
-    WHERE monitor_id = ${monitorId}
-      AND checked_at >= NOW() - make_interval(days => ${days})
-    ORDER BY DATE(checked_at) DESC, checked_at DESC
+    WITH daily_stats AS (
+      SELECT
+        DATE(checked_at) as check_date,
+        MAX(status) FILTER (WHERE status = 'down') as had_down,
+        MAX(status) as latest_status,
+        COUNT(*) FILTER (WHERE status = 'down') as down_count
+      FROM check_results
+      WHERE monitor_id = ${monitorId}
+        AND checked_at >= NOW() - make_interval(days => ${days})
+      GROUP BY DATE(checked_at)
+    )
+    SELECT
+      cr.*,
+      CASE WHEN ds.had_down IS NOT NULL THEN true ELSE false END as has_downtime,
+      CASE WHEN ds.had_down IS NOT NULL AND ds.latest_status = 'up' THEN true ELSE false END as recovered
+    FROM check_results cr
+    INNER JOIN daily_stats ds ON DATE(cr.checked_at) = ds.check_date
+    WHERE cr.monitor_id = ${monitorId}
+      AND cr.checked_at >= NOW() - make_interval(days => ${days})
+    ORDER BY cr.checked_at DESC
   `;
-  return rows as CheckResult[];
+
+  // 去重：每个日期只保留最新的记录
+  const resultMap = new Map<string, CheckResult>();
+  for (const row of rows as CheckResult[]) {
+    const date = row.checked_at.split('T')[0];
+    if (!resultMap.has(date)) {
+      resultMap.set(date, row);
+    }
+  }
+  return Array.from(resultMap.values()).reverse();
 }
 
 export async function getCheckResultsInRange(
