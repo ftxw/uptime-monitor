@@ -70,11 +70,13 @@ export function MonitorTable({ monitors, categories, onDelete }: MonitorTablePro
 
           return (
             <Card key={categoryId || "uncategorized"} className="bg-card">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-medium text-card-foreground">
-                  {categoryName} ({categoryMonitors.length})
-                </CardTitle>
-              </CardHeader>
+              {categoryId !== null && (
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-medium text-card-foreground">
+                    {categoryName} ({categoryMonitors.length})
+                  </CardTitle>
+                </CardHeader>
+              )}
               <CardContent className="p-0">
                 <div className="divide-y divide-border">
                   {categoryMonitors.map((monitor) => (

@@ -256,7 +256,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
               暂无故障记录
             </div>
           ) : (
-            <div className="divide-y divide-border">
+                <div className="divide-y divide-border">
               {incidents.map((incident) => (
                 <div
                   key={incident.id}
@@ -264,12 +264,15 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
                 >
                   <div className="flex items-center gap-3">
                     <StatusBadge
-                      status={incident.status === "ongoing" ? "down" : "up"}
+                      status="down"
                       size="sm"
                     />
                     <span className="text-card-foreground">
                       {incident.cause || "无详情"}
                     </span>
+                    {incident.status === "resolved" && (
+                      <span className="text-xs text-muted-foreground">（已解决）</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span>
