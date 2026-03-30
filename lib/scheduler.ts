@@ -98,9 +98,16 @@ async function shouldCheckMonitor(
   const lastCheckedAt = new Date(lastCheck[0].checked_at);
   const now = new Date();
   const secondsSinceLastCheck = (now.getTime() - lastCheckedAt.getTime()) / 1000;
+  const interval = monitor.check_interval_seconds;
 
-  console.log(`[Scheduler] ${monitor.name}: 距离上次检查 ${Math.floor(secondsSinceLastCheck)}秒，间隔设置为 ${monitor.check_interval_seconds}秒`);
+  // 详细的调试日志
+  console.log(`[Scheduler] ${monitor.name}:`);
+  console.log(`  - 上次检查: ${lastCheckedAt.toISOString()}`);
+  console.log(`  - 当前时间: ${now.toISOString()}`);
+  console.log(`  - 距离上次: ${secondsSinceLastCheck.toFixed(2)}秒`);
+  console.log(`  - 检查间隔: ${interval}秒`);
+  console.log(`  - 是否需要检查: ${secondsSinceLastCheck >= interval}`);
 
   // 如果距离上次检查的时间超过了设定的间隔，需要检查
-  return secondsSinceLastCheck >= monitor.check_interval_seconds;
+  return secondsSinceLastCheck >= interval;
 }
