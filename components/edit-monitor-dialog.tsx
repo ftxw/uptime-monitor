@@ -33,13 +33,6 @@ interface EditMonitorDialogProps {
   onSave: () => void;
 }
 
-const INTERVAL_OPTIONS = [
-  { label: "每 5 分钟", value: "300" },
-  { label: "每 10 分钟", value: "600" },
-  { label: "每 30 分钟", value: "1800" },
-  { label: "每 1 小时", value: "3600" },
-];
-
 export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);

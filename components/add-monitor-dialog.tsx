@@ -27,7 +27,12 @@ import { INTERVAL_OPTIONS } from "@/lib/constants";
 import type { Category } from "@/lib/types";
 import { CategoryManager } from "@/components/category-manager";
 
-const [open, setOpen] = useState(false);
+interface AddMonitorDialogProps {
+  onAdd: () => void;
+}
+
+export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
+  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [url, setUrl] = useState("https://");
