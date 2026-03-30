@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button";
 import { StatCards } from "@/components/stat-cards";
 import { MonitorTable } from "@/components/monitor-table";
 import { AddMonitorDialog } from "@/components/add-monitor-dialog";
+import { fetcher } from "@/lib/api";
 import type { MonitorWithStatus, DashboardStats, Category } from "@/lib/types";
-
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface DashboardData {
   monitors: MonitorWithStatus[];

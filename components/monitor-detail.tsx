@@ -19,15 +19,9 @@ import { StatusBadge } from "@/components/status-badge";
 import { UptimeBar } from "@/components/uptime-bar";
 import { ResponseTimeChart } from "@/components/response-time-chart";
 import { EditMonitorDialog } from "@/components/edit-monitor-dialog";
+import { fetcher } from "@/lib/api";
+import { formatInterval } from "@/lib/utils";
 import type { Monitor, CheckResult, Incident } from "@/lib/types";
-
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
-
-function formatInterval(seconds: number): string {
-  if (seconds < 60) return `${seconds} 秒`;
-  if (seconds < 3600) return `${Math.round(seconds / 60)} 分钟`;
-  return `${Math.round(seconds / 3600)} 小时${Math.round(seconds / 3600) > 1 ? "" : ""}`;
-}
 
 interface MonitorDetailProps {
   monitor: Monitor;

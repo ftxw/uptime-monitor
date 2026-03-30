@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react"
-
 import { useState } from "react";
 import useSWR from "swr";
 import { Pencil } from "lucide-react";
@@ -25,10 +23,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { fetcher } from "@/lib/api";
+import { INTERVAL_OPTIONS } from "@/lib/constants";
 import type { Monitor, Category } from "@/lib/types";
 import { CategoryManager } from "@/components/category-manager";
-
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface EditMonitorDialogProps {
   monitor: Monitor;

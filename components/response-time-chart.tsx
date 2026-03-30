@@ -11,9 +11,8 @@ import {
   CartesianGrid,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { fetcher } from "@/lib/api";
 import type { CheckResult } from "@/lib/types";
-
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface ResponseTimeChartProps {
   monitorId: string;

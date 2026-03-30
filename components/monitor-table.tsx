@@ -12,24 +12,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { StatusBadge } from "@/components/status-badge";
 import { UptimeBar } from "@/components/uptime-bar";
+import { formatInterval, formatResponseTime } from "@/lib/utils";
 import type { MonitorWithStatus, Category } from "@/lib/types";
 
 interface MonitorTableProps {
   monitors: MonitorWithStatus[];
   categories: Category[];
   onDelete: (id: string) => void;
-}
-
-function formatResponseTime(ms: number | null): string {
-  if (ms === null) return "--";
-  if (ms < 1000) return `${ms}ms`;
-  return `${(ms / 1000).toFixed(2)}s`;
-}
-
-function formatInterval(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
-  return `${Math.round(seconds / 3600)}h`;
 }
 
 export function MonitorTable({ monitors, categories, onDelete }: MonitorTableProps) {

@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react"
-
 import { useState } from "react";
 import useSWR from "swr";
 import { Plus, Pencil } from "lucide-react";
@@ -24,24 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { fetcher } from "@/lib/api";
+import { INTERVAL_OPTIONS } from "@/lib/constants";
 import type { Category } from "@/lib/types";
 import { CategoryManager } from "@/components/category-manager";
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
-
-interface AddMonitorDialogProps {
-  onAdd: () => void;
-}
-
-const INTERVAL_OPTIONS = [
-  { label: "每 5 分钟", value: "300" },
-  { label: "每 10 分钟", value: "600" },
-  { label: "每 30 分钟", value: "1800" },
-  { label: "每 1 小时", value: "3600" },
-];
-
-export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
-  const [open, setOpen] = useState(false);
+const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [url, setUrl] = useState("https://");

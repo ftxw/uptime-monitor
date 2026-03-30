@@ -6,9 +6,8 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { fetcher } from "@/lib/api";
 import type { CheckResult } from "@/lib/types";
-
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface UptimeBarProps {
   monitorId: string;
