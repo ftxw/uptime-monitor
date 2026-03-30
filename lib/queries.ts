@@ -157,37 +157,39 @@ export async function getDailyCheckResults(
 ): Promise<CheckResult[]> {
   const sql = getDb();
   const rows = await sql`
-    SELECT DISTINCT ON (DATE(checked_at)) *
-    FROM check_results
-    WHERE monitor_id = ${monitorId}
-      AND checked_at >= NOW() - make_interval(days => ${days})
-    ORDER BY DATE(checked_at) DESC, checked_at DESC
+    WITH daily_down AS (
+      SELECT DISTINCT DATE(checked_at) as check_date
+      FROM check_results
+      WHERE monitor_id = ${monitorId}
+        AND checked_at >= NOW() - make_interval(days => ${days})
+        AND status = 'down'
+    ),
+    daily_last AS (
+      SELECT DISTINCT ON (DATE(checked_at))
+        DATE(checked_at) as check_date,
+        status as last_status
+      FROM check_results
+      WHERE monitor_id = ${monitorId}
+        AND checked_at >= NOW() - make_interval(days => ${days})
+      ORDER BY DATE(checked_at) DESC, checked_at DESC
+    ),
+    base AS (
+      SELECT DISTINCT ON (DATE(checked_at)) *
+      FROM check_results
+      WHERE monitor_id = ${monitorId}
+        AND checked_at >= NOW() - make_interval(days => ${days})
+      ORDER BY DATE(checked_at) DESC, checked_at DESC
+    )
+    SELECT
+      b.*,
+      CASE WHEN d.check_date IS NOT NULL THEN true ELSE false END as has_downtime,
+      CASE WHEN d.check_date IS NOT NULL AND l.last_status = 'up' THEN true ELSE false END as recovered
+    FROM base b
+    LEFT JOIN daily_down d ON DATE(b.checked_at) = d.check_date
+    LEFT JOIN daily_last l ON DATE(b.checked_at) = l.check_date
   `;
 
-  // 获取每天是否有 down 状态的记录
-  const allChecks = await sql`
-    SELECT DISTINCT DATE(checked_at) as check_date
-    FROM check_results
-    WHERE monitor_id = ${monitorId}
-      AND checked_at >= NOW() - make_interval(days => ${days})
-      AND status = 'down'
-  `;
-  
-  const downDays = new Set(allChecks.map(r => r.check_date.toString()));
-
-  // 为每条记录添加 has_downtime 和 recovered 字段
-  const results = (rows as CheckResult[]).map(row => {
-    const date = row.checked_at.split('T')[0];
-    const hasDowntime = downDays.has(date);
-    return {
-      ...row,
-      has_downtime: hasDowntime,
-      // 如果当天有 down 记录但最新状态是 up，说明已恢复
-      recovered: hasDowntime && row.status === 'up'
-    };
-  });
-
-  return results;
+  return rows as CheckResult[];
 }
 
 export async function getCheckResultsInRange(
