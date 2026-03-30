@@ -140,7 +140,7 @@ export function MonitorTable({ monitors, categories, onDelete }: MonitorTablePro
                         {/* Uptime % */}
                         <div className="flex flex-col items-start lg:items-end min-w-0">
                           <span className="text-xs text-muted-foreground whitespace-nowrap">
-                            运行率
+                            可用率
                           </span>
                           <span className="font-mono text-card-foreground">
                             {monitor.uptime_24h !== null

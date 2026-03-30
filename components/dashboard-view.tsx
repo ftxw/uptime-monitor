@@ -68,12 +68,12 @@ export function DashboardView() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            size="sm"
+            size="default"
             className="gap-1.5"
             onClick={handleCheckAll}
             disabled={checkingAll || (data?.stats.total_monitors ?? 0) === 0}
           >
-            <Play className={`h-3.5 w-3.5 ${checkingAll ? "animate-pulse" : ""}`} />
+            <Play className={`h-4 w-4 ${checkingAll ? "animate-pulse" : ""}`} />
             {checkingAll ? "检查中..." : "立即全部检查"}
           </Button>
           <AddMonitorDialog onAdd={() => mutate()} />
@@ -81,7 +81,6 @@ export function DashboardView() {
             variant="outline"
             size="icon"
             onClick={() => mutate()}
-            className="h-9 w-9"
             aria-label="刷新控制台"
           >
             <RefreshCw
