@@ -107,8 +107,9 @@ export function UptimeBar({ monitorId }: UptimeBarProps) {
   return (
     <div className="flex items-center gap-0.5" aria-label="运行历史">
       {Array.from({ length: segments }).map((_, i) => {
-        // 计算这个色块对应的日期
-        const daysAgo = segments - 1 - i;
+        // 计算这个色块对应的日期：从左到右，从今天到最早
+        // i=0时是今天，i=29时是29天前
+        const daysAgo = i;
         const targetDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
         const targetDateStr = targetDate.toLocaleDateString();
 
