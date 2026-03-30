@@ -24,9 +24,14 @@ function formatDuration(minutes: number): string {
 
 interface DayTooltipProps {
   check: CheckResult | undefined;
+  daysAgo: number;
 }
 
-function DayTooltip({ check }: DayTooltipProps) {
+function DayTooltip({ check, daysAgo }: DayTooltipProps) {
+  // 计算对应的日期
+  const date = check ? new Date(check.checked_at) : new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+  const dateStr = date.toLocaleDateString();
+
   if (!check) {
     return (
       <div className="space-y-2 px-3 py-2">
@@ -36,14 +41,11 @@ function DayTooltip({ check }: DayTooltipProps) {
         </div>
         <div className="border-t border-border" />
         <div className="text-xs text-muted-foreground">
-          {new Date().toLocaleDateString()}
+          {dateStr}
         </div>
       </div>
     );
   }
-
-  const date = new Date(check.checked_at);
-  const dateStr = date.toLocaleDateString();
 
   let statusInfo: { label: string; color: string; bg: string };
   let downtimeInfo: string | null = null;
@@ -131,7 +133,7 @@ export function UptimeBar({ monitorId }: UptimeBarProps) {
               side="top"
               align="center"
             >
-              <DayTooltip check={check} />
+              <DayTooltip check={check} daysAgo={segments - 1 - i} />
             </HoverCardContent>
           </HoverCard>
         );
