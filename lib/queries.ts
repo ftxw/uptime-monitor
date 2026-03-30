@@ -158,38 +158,38 @@ export async function getDailyCheckResults(
   const sql = getDb();
   const rows = await sql`
     WITH daily_down AS (
-      SELECT DISTINCT DATE(checked_at) as check_date
+      SELECT DISTINCT DATE(checked_at AT TIME ZONE 'UTC') as check_date
       FROM check_results
       WHERE monitor_id = ${monitorId}
         AND checked_at >= NOW() - make_interval(days => ${days})
         AND status = 'down'
     ),
     daily_last AS (
-      SELECT DISTINCT ON (DATE(checked_at))
-        DATE(checked_at) as check_date,
+      SELECT DISTINCT ON (DATE(checked_at AT TIME ZONE 'UTC'))
+        DATE(checked_at AT TIME ZONE 'UTC') as check_date,
         status as last_status
       FROM check_results
       WHERE monitor_id = ${monitorId}
         AND checked_at >= NOW() - make_interval(days => ${days})
-      ORDER BY DATE(checked_at) DESC, checked_at DESC
+      ORDER BY DATE(checked_at AT TIME ZONE 'UTC') DESC, checked_at DESC
     ),
     daily_downtime AS (
       SELECT
-        DATE(checked_at) as check_date,
+        DATE(checked_at AT TIME ZONE 'UTC') as check_date,
         COUNT(*) FILTER (WHERE status = 'down') as down_count,
         AVG(check_interval_seconds) as avg_interval_seconds
       FROM check_results cr
       JOIN monitors m ON cr.monitor_id = m.id
       WHERE cr.monitor_id = ${monitorId}
         AND cr.checked_at >= NOW() - make_interval(days => ${days})
-      GROUP BY DATE(cr.checked_at)
+      GROUP BY DATE(cr.checked_at AT TIME ZONE 'UTC')
     ),
     base AS (
-      SELECT DISTINCT ON (DATE(checked_at)) *
+      SELECT DISTINCT ON (DATE(checked_at AT TIME ZONE 'UTC')) *
       FROM check_results
       WHERE monitor_id = ${monitorId}
         AND checked_at >= NOW() - make_interval(days => ${days})
-      ORDER BY DATE(checked_at) DESC, checked_at DESC
+      ORDER BY DATE(checked_at AT TIME ZONE 'UTC') DESC, checked_at DESC
     )
     SELECT
       b.*,
@@ -201,9 +201,9 @@ export async function getDailyCheckResults(
         ELSE 0
       END as downtime_minutes
     FROM base b
-    LEFT JOIN daily_down d ON DATE(b.checked_at) = d.check_date
-    LEFT JOIN daily_last l ON DATE(b.checked_at) = l.check_date
-    LEFT JOIN daily_downtime dd ON DATE(b.checked_at) = dd.check_date
+    LEFT JOIN daily_down d ON DATE(b.checked_at AT TIME ZONE 'UTC') = d.check_date
+    LEFT JOIN daily_last l ON DATE(b.checked_at AT TIME ZONE 'UTC') = l.check_date
+    LEFT JOIN daily_downtime dd ON DATE(b.checked_at AT TIME ZONE 'UTC') = dd.check_date
   `;
 
   return rows as CheckResult[];

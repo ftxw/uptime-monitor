@@ -69,7 +69,7 @@ function DayTooltip({ check, daysAgo }: DayTooltipProps) {
     <div className="space-y-2 px-3 py-2">
       <div className="flex items-center gap-2 text-sm">
         <span className={`h-2 w-2 rounded-full ${statusInfo.bg}`} />
-        <span className={statusInfo.color}>{statusInfo.label}</span>
+        <span>{statusInfo.label}</span>
       </div>
       {downtimeInfo && (
         <div className="text-xs text-muted-foreground">
@@ -88,11 +88,11 @@ function DayTooltip({ check, daysAgo }: DayTooltipProps) {
  * 一个可视化的条形图,显示最近 30 天的检查结果为彩色段。
  * 绿色 = 正常,红色 = 故障未恢复/全天故障,半透明红色 = 有故障但已恢复,黄色 = 降级,灰色 = 无数据。
  */
-// 辅助函数：获取日期的年月日字符串（YYYY-MM-DD）
+// 辅助函数：获取日期的年月日字符串（YYYY-MM-DD），使用 UTC 时间以匹配数据库的时区处理
 function getDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
@@ -119,6 +119,7 @@ export function UptimeBar({ monitorId }: UptimeBarProps) {
         // i=0时是今天，i=29时是29天前
         const daysAgo = i;
         const targetDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+        // 使用 UTC 时间获取日期键，以匹配数据库的时区处理
         const targetDateKey = getDateKey(targetDate);
 
         // 根据日期查找对应的数据
