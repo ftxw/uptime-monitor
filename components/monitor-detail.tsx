@@ -281,7 +281,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
                     </span>
                     {incident.resolved_at && (
                       <span>
-                        解决时间：{" "}
+                        恢复时间：{" "}
                         {new Date(incident.resolved_at).toLocaleString()}
                       </span>
                     )}
