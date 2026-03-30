@@ -39,8 +39,6 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    --pink: 0 84% 70%;
-    --pink-foreground: 0 0% 100%;
   }
   .dark {
     --background: 224 20% 7%;
@@ -71,8 +69,6 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    --pink: 0 84% 70%;
-    --pink-foreground: 0 0% 100%;
   }
 }
 

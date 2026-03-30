@@ -51,7 +51,7 @@ function DayTooltip({ check, daysAgo }: DayTooltipProps) {
   let downtimeInfo: string | null = null;
 
   if (check.has_downtime && check.recovered) {
-    statusInfo = { label: "已恢复", color: "text-pink", bg: "bg-pink" };
+    statusInfo = { label: "已恢复", color: "text-destructive/70", bg: "bg-destructive/50" };
     if (check.downtime_minutes && check.downtime_minutes > 0) {
       downtimeInfo = `故障时长：${formatDuration(check.downtime_minutes)}`;
     }
@@ -86,8 +86,16 @@ function DayTooltip({ check, daysAgo }: DayTooltipProps) {
 
 /**
  * 一个可视化的条形图,显示最近 30 天的检查结果为彩色段。
- * 绿色 = 正常,红色 = 故障未恢复/全天故障,粉红色 = 有故障但已恢复,黄色 = 降级,灰色 = 无数据。
+ * 绿色 = 正常,红色 = 故障未恢复/全天故障,半透明红色 = 有故障但已恢复,黄色 = 降级,灰色 = 无数据。
  */
+// 辅助函数：获取日期的年月日字符串（YYYY-MM-DD）
+function getDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function UptimeBar({ monitorId }: UptimeBarProps) {
   const { data: checks } = useSWR<CheckResult[]>(
     `/api/monitors/${monitorId}/checks/daily?days=30`,
@@ -96,10 +104,10 @@ export function UptimeBar({ monitorId }: UptimeBarProps) {
   );
 
   const segments = 30;
-  // 创建一个Map，键为日期字符串，值为对应的CheckResult
+  // 创建一个Map，键为日期字符串（YYYY-MM-DD），值为对应的CheckResult
   const checkMap = checks ? new Map(
     checks.map(check => [
-      new Date(check.checked_at).toLocaleDateString(),
+      getDateKey(new Date(check.checked_at)),
       check
     ])
   ) : new Map();
@@ -111,17 +119,17 @@ export function UptimeBar({ monitorId }: UptimeBarProps) {
         // i=0时是今天，i=29时是29天前
         const daysAgo = i;
         const targetDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
-        const targetDateStr = targetDate.toLocaleDateString();
+        const targetDateKey = getDateKey(targetDate);
 
         // 根据日期查找对应的数据
-        const check = checkMap.get(targetDateStr);
+        const check = checkMap.get(targetDateKey);
 
         let colorClass = "bg-muted";
 
         if (check) {
-          // 优先判断是否有故障但已恢复(粉红色)
+          // 优先判断是否有故障但已恢复(50%透明度的红色)
           if (check.has_downtime && check.recovered) {
-            colorClass = "bg-pink";
+            colorClass = "bg-destructive/50";
           }
           // 故障未恢复或全天都是故障(红色)
           else if (check.status === "down" || (check.has_downtime && !check.recovered)) {
