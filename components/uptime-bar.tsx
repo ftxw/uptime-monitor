@@ -11,13 +11,6 @@ interface UptimeBarProps {
   monitorId: string;
 }
 
-function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} 分钟`;
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return mins > 0 ? `${hours} 小时 ${mins} 分钟` : `${hours} 小时`;
-}
-
 interface DayTooltipProps {
   check: CheckResult | undefined;
 }
@@ -42,13 +35,9 @@ function DayTooltip({ check }: DayTooltipProps) {
   const dateStr = date.toLocaleDateString();
 
   let statusInfo: { label: string; color: string; bg: string };
-  let downtimeInfo: string | null = null;
 
   if (check.has_downtime && check.recovered) {
     statusInfo = { label: "已恢复", color: "text-warning", bg: "bg-warning" };
-    if (check.downtime_minutes != null && check.downtime_minutes > 0) {
-      downtimeInfo = `故障时间：${formatDuration(check.downtime_minutes)}`;
-    }
   } else if (check.status === "down" || (check.has_downtime && !check.recovered)) {
     statusInfo = { label: "故障", color: "text-destructive", bg: "bg-destructive" };
   } else if (check.status === "up") {
@@ -65,11 +54,6 @@ function DayTooltip({ check }: DayTooltipProps) {
         <span className={`h-2 w-2 rounded-full ${statusInfo.bg}`} />
         <span className={statusInfo.color}>{statusInfo.label}</span>
       </div>
-      {downtimeInfo && (
-        <div className="text-xs text-muted-foreground">
-          {downtimeInfo}
-        </div>
-      )}
       <div className="border-t border-border" />
       <div className="text-xs text-muted-foreground">
         {dateStr}
