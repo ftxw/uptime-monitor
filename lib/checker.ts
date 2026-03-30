@@ -84,12 +84,29 @@ export async function performCheck(monitor: Monitor): Promise<CheckOutput> {
       ssl_days_remaining: sslDaysRemaining,
       error_message: statusCodeMatch
         ? null
-        : `Expected ${monitor.expected_status_code}, got ${response.status}`,
+        : `期望状态码 ${monitor.expected_status_code}，实际收到 ${response.status}`,
     };
   } catch (error) {
     const responseTimeMs = Date.now() - startTime;
-    const message =
-      error instanceof Error ? error.message : "Unknown error occurred";
+    let message = "未知错误";
+    
+    if (error instanceof Error) {
+      // Translate common error messages to Chinese
+      const errorMessage = error.message;
+      if (errorMessage.includes("ENOTFOUND")) {
+        message = "无法解析域名";
+      } else if (errorMessage.includes("ECONNREFUSED")) {
+        message = "连接被拒绝";
+      } else if (errorMessage.includes("ETIMEDOUT")) {
+        message = "连接超时";
+      } else if (errorMessage.includes("ECONNRESET")) {
+        message = "连接被重置";
+      } else if (errorMessage.includes("fetch failed")) {
+        message = "请求失败";
+      } else {
+        message = errorMessage;
+      }
+    }
 
     return {
       status: "down",
@@ -150,7 +167,7 @@ async function checkSSL(
 
       socket.on("timeout", () => {
         socket.destroy();
-        reject(new Error("SSL check timed out"));
+        reject(new Error("SSL 检查超时"));
       });
     } catch (err) {
       reject(err);

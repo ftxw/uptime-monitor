@@ -7,12 +7,12 @@ interface StatusBadgeProps {
 
 const statusConfig = {
   up: {
-    label: "运行正常",
+    label: "正常",
     dotClass: "bg-success",
     bgClass: "bg-success/10 text-success",
   },
   down: {
-    label: "离线",
+    label: "故障",
     dotClass: "bg-destructive",
     bgClass: "bg-destructive/10 text-destructive",
   },

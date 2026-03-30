@@ -21,7 +21,7 @@ interface ResponseTimeChartProps {
 
 export function ResponseTimeChart({ monitorId }: ResponseTimeChartProps) {
   const { data: checks } = useSWR<CheckResult[]>(
-    `/api/monitors/${monitorId}/checks?limit=200`,
+    `/api/monitors/${monitorId}/checks?limit=20`,
     fetcher,
     { refreshInterval: 120000 }
   );
