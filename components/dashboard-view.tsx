@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { RefreshCw, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatCards } from "@/components/stat-cards";
 import { MonitorTable } from "@/components/monitor-table";
@@ -27,7 +27,7 @@ const defaultStats: DashboardStats = {
 export function DashboardView() {
   const [checkingAll, setCheckingAll] = useState(false);
 
-  const { data, mutate, isLoading } = useSWR<DashboardData>(
+  const { data, mutate } = useSWR<DashboardData>(
     "/api/dashboard",
     fetcher,
     { refreshInterval: 60000 }
@@ -77,16 +77,6 @@ export function DashboardView() {
             {checkingAll ? "检查中..." : "立即全部检查"}
           </Button>
           <AddMonitorDialog onAdd={() => mutate()} />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => mutate()}
-            aria-label="刷新控制台"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-            />
-          </Button>
         </div>
       </div>
 

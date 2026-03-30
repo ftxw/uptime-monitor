@@ -63,26 +63,26 @@ export function CategoryManager({
   return (
     <div className="flex flex-col gap-4">
       {/* Add new category */}
-      <div className="flex gap-2">
-        <div className="flex-1 flex flex-col gap-2">
-          <Label htmlFor="new-category">添加新分类</Label>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="new-category">添加新分类</Label>
+        <div className="flex gap-2">
           <Input
             id="new-category"
             placeholder="分类名称"
             value={newCategoryName}
             onChange={(e) => setNewCategoryName(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="bg-background"
+            className="bg-background flex-1"
           />
+          <Button
+            onClick={handleAddCategory}
+            disabled={isAdding || !newCategoryName.trim()}
+            className="gap-2 h-10"
+          >
+            <Plus className="h-4 w-4" />
+            添加
+          </Button>
         </div>
-        <Button
-          onClick={handleAddCategory}
-          disabled={isAdding || !newCategoryName.trim()}
-          className="mt-5 gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          添加
-        </Button>
       </div>
 
       {/* Category list */}
