@@ -271,7 +271,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
                       {incident.cause || "无详情"}
                     </span>
                     {incident.status === "resolved" && (
-                      <span className="text-xs text-muted-foreground">（已解决）</span>
+                      <span className="text-xs text-muted-foreground">（已恢复）</span>
                     )}
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
