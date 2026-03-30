@@ -44,7 +44,7 @@ export async function deleteCategory(id: string): Promise<void> {
 
 export async function getMonitors(): Promise<Monitor[]> {
   const sql = getDb();
-  const rows = await sql`SELECT * FROM monitors ORDER BY created_at DESC`;
+  const rows = await sql`SELECT * FROM monitors ORDER BY created_at ASC`;
   return rows as Monitor[];
 }
 
@@ -56,7 +56,7 @@ export async function getMonitorById(id: string): Promise<Monitor | null> {
 
 export async function getActiveMonitors(): Promise<Monitor[]> {
   const sql = getDb();
-  const rows = await sql`SELECT * FROM monitors WHERE is_active = true ORDER BY created_at DESC`;
+  const rows = await sql`SELECT * FROM monitors WHERE is_active = true ORDER BY created_at ASC`;
   return rows as Monitor[];
 }
 
@@ -337,7 +337,7 @@ export async function getMonitorsWithStatus(): Promise<MonitorWithStatus[]> {
   const sql = getDb();
 
   // Get all monitors
-  const monitors = await sql`SELECT * FROM monitors ORDER BY created_at DESC`;
+  const monitors = await sql`SELECT * FROM monitors ORDER BY created_at ASC`;
 
   if (monitors.length === 0) return [];
 
