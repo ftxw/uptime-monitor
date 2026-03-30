@@ -37,6 +37,8 @@ export interface CheckResult {
   has_downtime?: boolean;
   /** 当天有故障但已恢复 */
   recovered?: boolean;
+  /** 当天故障时长(分钟) */
+  downtime_minutes?: number;
 }
 
 export interface Incident {

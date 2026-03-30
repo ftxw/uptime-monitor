@@ -173,6 +173,17 @@ export async function getDailyCheckResults(
         AND checked_at >= NOW() - make_interval(days => ${days})
       ORDER BY DATE(checked_at) DESC, checked_at DESC
     ),
+    daily_downtime AS (
+      SELECT
+        DATE(checked_at) as check_date,
+        COUNT(*) FILTER (WHERE status = 'down') as down_count,
+        AVG(check_interval_seconds) as avg_interval_seconds
+      FROM check_results cr
+      JOIN monitors m ON cr.monitor_id = m.id
+      WHERE cr.monitor_id = ${monitorId}
+        AND cr.checked_at >= NOW() - make_interval(days => ${days})
+      GROUP BY DATE(cr.checked_at)
+    ),
     base AS (
       SELECT DISTINCT ON (DATE(checked_at)) *
       FROM check_results
@@ -183,10 +194,16 @@ export async function getDailyCheckResults(
     SELECT
       b.*,
       CASE WHEN d.check_date IS NOT NULL THEN true ELSE false END as has_downtime,
-      CASE WHEN d.check_date IS NOT NULL AND l.last_status = 'up' THEN true ELSE false END as recovered
+      CASE WHEN d.check_date IS NOT NULL AND l.last_status = 'up' THEN true ELSE false END as recovered,
+      CASE
+        WHEN dd.check_date IS NOT NULL AND dd.down_count > 0
+        THEN ROUND((dd.down_count::numeric * COALESCE(dd.avg_interval_seconds, 60)) / 60, 2)
+        ELSE 0
+      END as downtime_minutes
     FROM base b
     LEFT JOIN daily_down d ON DATE(b.checked_at) = d.check_date
     LEFT JOIN daily_last l ON DATE(b.checked_at) = l.check_date
+    LEFT JOIN daily_downtime dd ON DATE(b.checked_at) = dd.check_date
   `;
 
   return rows as CheckResult[];

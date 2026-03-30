@@ -1,14 +1,25 @@
 "use client";
 
-import { useState } from "react";
 import useSWR from "swr";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import type { CheckResult } from "@/lib/types";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface UptimeBarProps {
   monitorId: string;
+}
+
+function formatDuration(minutes: number): string {
+  if (minutes < 1) return "不足1分钟";
+  if (minutes < 60) return `${Math.round(minutes)} 分钟`;
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  return mins > 0 ? `${hours} 小时 ${mins} 分钟` : `${hours} 小时`;
 }
 
 interface DayTooltipProps {
@@ -35,9 +46,13 @@ function DayTooltip({ check }: DayTooltipProps) {
   const dateStr = date.toLocaleDateString();
 
   let statusInfo: { label: string; color: string; bg: string };
+  let downtimeInfo: string | null = null;
 
   if (check.has_downtime && check.recovered) {
     statusInfo = { label: "已恢复", color: "text-warning", bg: "bg-warning" };
+    if (check.downtime_minutes && check.downtime_minutes > 0) {
+      downtimeInfo = `故障时长：${formatDuration(check.downtime_minutes)}`;
+    }
   } else if (check.status === "down" || (check.has_downtime && !check.recovered)) {
     statusInfo = { label: "故障", color: "text-destructive", bg: "bg-destructive" };
   } else if (check.status === "up") {
@@ -54,6 +69,11 @@ function DayTooltip({ check }: DayTooltipProps) {
         <span className={`h-2 w-2 rounded-full ${statusInfo.bg}`} />
         <span className={statusInfo.color}>{statusInfo.label}</span>
       </div>
+      {downtimeInfo && (
+        <div className="text-xs text-muted-foreground">
+          {downtimeInfo}
+        </div>
+      )}
       <div className="border-t border-border" />
       <div className="text-xs text-muted-foreground">
         {dateStr}
@@ -100,20 +120,20 @@ export function UptimeBar({ monitorId }: UptimeBarProps) {
         }
 
         return (
-          <Popover key={`${monitorId}-${i}`}>
-            <PopoverTrigger asChild>
+          <HoverCard key={`${monitorId}-${i}`}>
+            <HoverCardTrigger asChild>
               <div
                 className={`h-6 flex-1 cursor-pointer rounded-sm transition-all hover:brightness-110 ${colorClass}`}
               />
-            </PopoverTrigger>
-            <PopoverContent
+            </HoverCardTrigger>
+            <HoverCardContent
               className="w-auto border-border bg-popover p-0"
               side="top"
               align="center"
             >
               <DayTooltip check={check} />
-            </PopoverContent>
-          </Popover>
+            </HoverCardContent>
+          </HoverCard>
         );
       })}
     </div>
