@@ -4,7 +4,7 @@
  * 工作原理：
  * 1. 定期检查数据库中的活跃监控
  * 2. 根据每个监控的 check_interval_seconds 判断是否需要执行检查
- * 3. 如果距离上次检查的时间超过了设定的间隔，则执行新的检查
+ * 3. 每个监控基于自身创建时间计算固定的检查时间点，不会因 cron 频率而同步
  */
 
 import { getDb } from "./db";
@@ -38,7 +38,7 @@ export async function runSchedulerCycle(): Promise<{
     for (const monitor of monitors) {
       try {
         // 检查该监控是否需要执行检查
-        const shouldCheck = await shouldCheckMonitor(sql, monitor);
+        const shouldCheck = shouldCheckBySchedule(monitor);
 
         if (shouldCheck) {
           // 执行健康检查
@@ -75,39 +75,50 @@ export async function runSchedulerCycle(): Promise<{
 
 /**
  * 判断监控是否需要执行检查
+ *
+ * 基于监控的创建时间计算固定的检查时间点，
+ * 确保不同时间添加的监控始终保持各自的检查节奏，不会同步。
+ *
+ * 示例（间隔 5 分钟）：
+ *   监控 A（18:00:00 创建）→ 检查时间: 18:00, 18:05, 18:10, 18:15 ...
+ *   监控 B（18:02:00 创建）→ 检查时间: 18:02, 18:07, 18:12, 18:17 ...
  */
-async function shouldCheckMonitor(
-  sql: any,
-  monitor: Monitor
-): Promise<boolean> {
-  // 获取该监控最后一次检查时间
-  const lastCheck = await sql`
-    SELECT checked_at
-    FROM check_results
-    WHERE monitor_id = ${monitor.id}
-    ORDER BY checked_at DESC
-    LIMIT 1
-  `;
+function shouldCheckBySchedule(monitor: Monitor): boolean {
+  const now = new Date();
+  const createdAt = new Date(monitor.created_at);
+  const interval = monitor.check_interval_seconds;
 
-  // 如果从未检查过，立即检查
-  if (lastCheck.length === 0) {
-    console.log(`[Scheduler] ${monitor.name}: 从未检查过，需要检查`);
+  // 计算从创建到现在经过了多少秒
+  const secondsSinceCreation = (now.getTime() - createdAt.getTime()) / 1000;
+
+  // 计算下一个固定检查时间点
+  // 例如：创建于 18:02，间隔 300 秒，已过 480 秒 → 480/300=1.6 → ceil=2 → 下次偏移=600 → 18:02+600=18:12
+  const nextCheckOffset = Math.ceil(secondsSinceCreation / interval) * interval;
+  const nextCheckTime = new Date(createdAt.getTime() + nextCheckOffset * 1000);
+
+  // 当前时间距离下次检查还有多少秒（负数表示已过期）
+  const secondsToNextCheck = (nextCheckTime.getTime() - now.getTime()) / 1000;
+
+  console.log(`[Scheduler] ${monitor.name}:`);
+  console.log(`  - 创建时间: ${createdAt.toISOString()}`);
+  console.log(`  - 当前时间: ${now.toISOString()}`);
+  console.log(`  - 检查间隔: ${interval}秒`);
+  console.log(`  - 下次检查: ${nextCheckTime.toISOString()}`);
+  console.log(`  - 距下次检查: ${secondsToNextCheck.toFixed(1)}秒`);
+
+  // 允许 30 秒的窗口：如果当前时间距离下次检查时间 ≤ 30 秒，执行检查
+  // 这覆盖了 cron 触发延迟的情况
+  if (secondsToNextCheck <= 30 && secondsToNextCheck > -interval) {
+    console.log(`  - 结果: 需要检查`);
     return true;
   }
 
-  const lastCheckedAt = new Date(lastCheck[0].checked_at);
-  const now = new Date();
-  const secondsSinceLastCheck = (now.getTime() - lastCheckedAt.getTime()) / 1000;
-  const interval = monitor.check_interval_seconds;
+  // 如果已经错过了超过一个间隔（比如服务器停机过），立即检查
+  if (secondsToNextCheck <= -interval) {
+    console.log(`  - 结果: 错过超过一个间隔，立即检查`);
+    return true;
+  }
 
-  // 详细的调试日志
-  console.log(`[Scheduler] ${monitor.name}:`);
-  console.log(`  - 上次检查: ${lastCheckedAt.toISOString()}`);
-  console.log(`  - 当前时间: ${now.toISOString()}`);
-  console.log(`  - 距离上次: ${secondsSinceLastCheck.toFixed(2)}秒`);
-  console.log(`  - 检查间隔: ${interval}秒`);
-  console.log(`  - 是否需要检查: ${secondsSinceLastCheck >= interval}`);
-
-  // 如果距离上次检查的时间超过了设定的间隔，需要检查
-  return secondsSinceLastCheck >= interval;
+  console.log(`  - 结果: 跳过`);
+  return false;
 }
