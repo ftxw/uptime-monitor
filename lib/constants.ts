@@ -9,5 +9,3 @@ export const INTERVAL_OPTIONS = [
   { label: "每 30 分钟", value: "1800" },
   { label: "每 1 小时", value: "3600" },
 ] as const;
-
-export type IntervalOption = typeof INTERVAL_OPTIONS[number];

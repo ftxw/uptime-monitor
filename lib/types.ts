@@ -50,17 +50,6 @@ export interface Incident {
   cause: string | null;
 }
 
-export interface AlertLogEntry {
-  id: string;
-  incident_id: string;
-  monitor_id: string;
-  channel: "email" | "sms" | "signal";
-  recipient: string;
-  sent_at: string;
-  success: boolean;
-  error_message: string | null;
-}
-
 /** Monitor with its latest check result and uptime stats */
 export interface MonitorWithStatus extends Monitor {
   latest_check: CheckResult | null;
@@ -78,18 +67,6 @@ export interface DashboardStats {
   monitors_degraded: number;
   overall_uptime_24h: number;
   active_incidents: number;
-}
-
-/** Form data for creating/updating a monitor */
-export interface MonitorFormData {
-  name: string;
-  url: string;
-  method: string;
-  check_interval_seconds: number;
-  timeout_seconds: number;
-  expected_status_code: number;
-  is_active: boolean;
-  category_id: string | null;
 }
 
 /** Authenticated user session */

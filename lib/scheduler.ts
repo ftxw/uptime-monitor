@@ -99,26 +99,16 @@ function shouldCheckBySchedule(monitor: Monitor): boolean {
   // 当前时间距离下次检查还有多少秒（负数表示已过期）
   const secondsToNextCheck = (nextCheckTime.getTime() - now.getTime()) / 1000;
 
-  console.log(`[Scheduler] ${monitor.name}:`);
-  console.log(`  - 创建时间: ${createdAt.toISOString()}`);
-  console.log(`  - 当前时间: ${now.toISOString()}`);
-  console.log(`  - 检查间隔: ${interval}秒`);
-  console.log(`  - 下次检查: ${nextCheckTime.toISOString()}`);
-  console.log(`  - 距下次检查: ${secondsToNextCheck.toFixed(1)}秒`);
-
   // 允许 30 秒的窗口：如果当前时间距离下次检查时间 ≤ 30 秒，执行检查
   // 这覆盖了 cron 触发延迟的情况
   if (secondsToNextCheck <= 30 && secondsToNextCheck > -interval) {
-    console.log(`  - 结果: 需要检查`);
     return true;
   }
 
   // 如果已经错过了超过一个间隔（比如服务器停机过），立即检查
   if (secondsToNextCheck <= -interval) {
-    console.log(`  - 结果: 错过超过一个间隔，立即检查`);
     return true;
   }
 
-  console.log(`  - 结果: 跳过`);
   return false;
 }

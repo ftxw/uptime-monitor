@@ -52,16 +52,4 @@ export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
   );
 }
 
-interface StatusDotProps {
-  status: "up" | "down" | "degraded";
-}
 
-export function StatusDot({ status }: StatusDotProps) {
-  const config = statusConfig[status];
-  return (
-    <span
-      className={cn("inline-block h-2 w-2 rounded-full", config.dotClass)}
-      aria-label={config.label}
-    />
-  );
-}

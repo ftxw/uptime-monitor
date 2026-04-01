@@ -209,45 +209,6 @@ export async function getDailyCheckResults(
   return rows as CheckResult[];
 }
 
-export async function getCheckResultsInRange(
-  monitorId: string,
-  startDate: Date,
-  endDate: Date
-): Promise<CheckResult[]> {
-  const sql = getDb();
-  const rows = await sql`
-    SELECT * FROM check_results
-    WHERE monitor_id = ${monitorId}
-      AND checked_at >= ${startDate.toISOString()}
-      AND checked_at <= ${endDate.toISOString()}
-    ORDER BY checked_at ASC
-  `;
-  return rows as CheckResult[];
-}
-
-// ---------------------------------------------------------------------------
-// Uptime calculations
-// ---------------------------------------------------------------------------
-
-export async function getUptimePercentage(
-  monitorId: string,
-  hoursAgo: number
-): Promise<number | null> {
-  const sql = getDb();
-  const rows = await sql`
-    SELECT
-      COUNT(*) FILTER (WHERE status = 'up') as up_count,
-      COUNT(*) as total_count
-    FROM check_results
-    WHERE monitor_id = ${monitorId}
-      AND checked_at >= now() - make_interval(hours => ${hoursAgo})
-  `;
-  const row = rows[0] as { up_count: string; total_count: string };
-  const total = parseInt(row.total_count, 10);
-  if (total === 0) return null;
-  return (parseInt(row.up_count, 10) / total) * 100;
-}
-
 // ---------------------------------------------------------------------------
 // Incidents
 // ---------------------------------------------------------------------------

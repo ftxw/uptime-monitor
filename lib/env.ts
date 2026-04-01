@@ -18,23 +18,6 @@ function getOptionalEnv(key: string, defaultValue: string = ""): string {
 }
 
 /**
- * Validates that all required environment variables are set.
- * Call this early in the application lifecycle (e.g., in a proxy or startup check).
- */
-export function validateEnv(): void {
-  // Only validate in production or when not bypassing auth
-  if (process.env.BYPASS_AUTH !== "true") {
-    getRequiredEnv("ADMIN_PASSWORD");
-  }
-
-  // Database is always required
-  getRequiredEnv("DATABASE_URL");
-
-  // Cron secret is required for automated monitoring
-  getOptionalEnv("CRON_SECRET");
-}
-
-/**
  * Get validated environment variables with type safety.
  */
 export const env = {
