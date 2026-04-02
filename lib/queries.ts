@@ -457,3 +457,132 @@ export function computeDashboardStats(monitors: MonitorWithStatus[]): DashboardS
     active_incidents: activeIncidents,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Database Initialization
+// ---------------------------------------------------------------------------
+
+/** 是否已检查过初始化状态（避免每次请求都检查） */
+let isInitializedChecked = false;
+
+/**
+ * 检查并初始化数据库
+ * 使用 CREATE TABLE IF NOT EXISTS 保证幂等性
+ * @returns true 表示执行了初始化，false 表示已存在无需初始化
+ */
+export async function initializeDatabase(): Promise<boolean> {
+  // 已检查过，直接跳过
+  if (isInitializedChecked) {
+    return false;
+  }
+
+  const sql = getDb();
+
+  // 检查 categories 表是否已存在
+  try {
+    const result = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'categories'
+      ) as exists
+    `;
+
+    if (result[0] && (result[0] as { exists: boolean }).exists) {
+      isInitializedChecked = true;
+      return false;
+    }
+  } catch (error) {
+    console.error("[Init] Error checking table existence:", error);
+    // 继续尝试初始化
+  }
+
+  // 执行数据库初始化
+  console.log("[Init] Database not initialized, creating tables...");
+
+  // Categories table
+  await sql`
+    CREATE TABLE IF NOT EXISTS categories (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      name TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `;
+
+  // Monitors table
+  await sql`
+    CREATE TABLE IF NOT EXISTS monitors (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      name TEXT NOT NULL,
+      url TEXT NOT NULL,
+      method TEXT NOT NULL DEFAULT 'GET',
+      check_interval_seconds INTEGER NOT NULL DEFAULT 3600,
+      timeout_seconds INTEGER NOT NULL DEFAULT 30,
+      expected_status_code INTEGER NOT NULL DEFAULT 200,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      category_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `;
+
+  // Check results table
+  await sql`
+    CREATE TABLE IF NOT EXISTS check_results (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      monitor_id TEXT NOT NULL REFERENCES monitors(id) ON DELETE CASCADE,
+      status TEXT NOT NULL CHECK (status IN ('up', 'down', 'degraded')),
+      status_code INTEGER,
+      response_time_ms INTEGER,
+      ssl_valid BOOLEAN,
+      ssl_expires_at TIMESTAMPTZ,
+      ssl_days_remaining INTEGER,
+      error_message TEXT,
+      checked_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `;
+
+  // Incidents table
+  await sql`
+    CREATE TABLE IF NOT EXISTS incidents (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      monitor_id TEXT NOT NULL REFERENCES monitors(id) ON DELETE CASCADE,
+      status TEXT NOT NULL DEFAULT 'ongoing' CHECK (status IN ('ongoing', 'resolved')),
+      started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      resolved_at TIMESTAMPTZ,
+      cause TEXT
+    )
+  `;
+
+  // Alert log table
+  await sql`
+    CREATE TABLE IF NOT EXISTS alert_log (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      incident_id TEXT NOT NULL REFERENCES incidents(id) ON DELETE CASCADE,
+      channel TEXT NOT NULL CHECK (channel IN ('email', 'sms', 'signal')),
+      recipient TEXT NOT NULL,
+      sent_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      success BOOLEAN NOT NULL DEFAULT true,
+      error_message TEXT
+    )
+  `;
+
+  // 创建索引
+  await sql`CREATE INDEX IF NOT EXISTS idx_check_results_monitor_id ON check_results(monitor_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_check_results_checked_at ON check_results(checked_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_check_results_monitor_checked ON check_results(monitor_id, checked_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_check_results_monitor_status ON check_results(monitor_id, status)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_check_results_status_checked ON check_results(status, checked_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_incidents_monitor_id ON incidents(monitor_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_incidents_status ON incidents(status)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_incidents_monitor_status ON incidents(monitor_id, status)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_alert_log_incident_id ON alert_log(incident_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_alert_log_sent_at ON alert_log(sent_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_monitors_category_id ON monitors(category_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_monitors_is_active ON monitors(is_active)`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name)`;
+
+  isInitializedChecked = true;
+  console.log("[Init] Database initialization complete");
+  return true;
+}

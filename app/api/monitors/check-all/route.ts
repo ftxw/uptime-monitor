@@ -9,6 +9,7 @@ import {
   cleanupOldCheckResults,
   cleanupOldAlertLogs,
   cleanupOldIncidents,
+  initializeDatabase,
 } from "@/lib/queries";
 import { performCheck } from "@/lib/checker";
 import { sendDownAlert, sendRecoveryAlert } from "@/lib/alerts";
@@ -29,11 +30,25 @@ interface CleanupResult {
   deleted: number;
 }
 
+/** 确保数据库已初始化 */
+async function ensureDatabaseInitialized(): Promise<boolean> {
+  try {
+    const result = await initializeDatabase();
+    if (result) {
+      console.log("[Init] Database initialized successfully");
+    }
+    return result;
+  } catch (error) {
+    console.error("[Init] Database initialization failed:", error);
+    return false;
+  }
+}
+
 /**
  * POST /api/monitors/check-all
  *
  * Manually triggers a health check for every active monitor.
- * Includes automatic cleanup of old data (runs once daily between 3:00-3:05 AM).
+ * Includes automatic database initialization and cleanup.
  */
 export async function POST() {
   try {
@@ -41,6 +56,9 @@ export async function POST() {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // 确保数据库已初始化
+    await ensureDatabaseInitialized();
 
     // 执行数据清理（每天只在 3:00-3:05 之间执行一次）
     const cleanupResult = await runDailyCleanup();
