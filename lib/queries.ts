@@ -462,38 +462,36 @@ export function computeDashboardStats(monitors: MonitorWithStatus[]): DashboardS
 // Database Initialization
 // ---------------------------------------------------------------------------
 
-/** 是否已检查过初始化状态（避免每次请求都检查） */
-let isInitializedChecked = false;
-
 /**
  * 检查并初始化数据库
- * 使用 CREATE TABLE IF NOT EXISTS 保证幂等性
+ * 使用 _db_meta 表记录初始化状态，确保幂等性
  * @returns true 表示执行了初始化，false 表示已存在无需初始化
  */
 export async function initializeDatabase(): Promise<boolean> {
-  // 已检查过，直接跳过
-  if (isInitializedChecked) {
-    return false;
-  }
-
   const sql = getDb();
 
-  // 检查 categories 表是否已存在
+  // 尝试获取初始化状态（使用数据库表持久化状态）
   try {
-    const result = await sql`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'categories'
-      ) as exists
+    // 确保 _db_meta 表存在（用于记录初始化状态）
+    await sql`
+      CREATE TABLE IF NOT EXISTS _db_meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
     `;
 
-    if (result[0] && (result[0] as { exists: boolean }).exists) {
-      isInitializedChecked = true;
+    // 检查是否已初始化
+    const meta = await sql`
+      SELECT value FROM _db_meta WHERE key = 'initialized'
+    `;
+
+    if (meta.length > 0 && (meta[0] as { value: string }).value === 'true') {
+      console.log("[Init] Database already initialized (checked via _db_meta)");
       return false;
     }
   } catch (error) {
-    console.error("[Init] Error checking table existence:", error);
+    console.error("[Init] Error checking initialization status:", error);
     // 继续尝试初始化
   }
 
@@ -582,7 +580,17 @@ export async function initializeDatabase(): Promise<boolean> {
   await sql`CREATE INDEX IF NOT EXISTS idx_monitors_is_active ON monitors(is_active)`;
   await sql`CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name)`;
 
-  isInitializedChecked = true;
-  console.log("[Init] Database initialization complete");
+  // 记录初始化完成状态
+  try {
+    await sql`
+      INSERT INTO _db_meta (key, value, updated_at)
+      VALUES ('initialized', 'true', now())
+      ON CONFLICT (key) DO UPDATE SET value = 'true', updated_at = now()
+    `;
+    console.log("[Init] Database initialization complete, marked as initialized");
+  } catch (error) {
+    console.error("[Init] Error recording initialization status:", error);
+  }
+
   return true;
 }
