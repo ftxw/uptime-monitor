@@ -3,8 +3,8 @@
  *
  * 工作原理：
  * 1. 定期检查数据库中的活跃监控
- * 2. 根据每个监控的 check_interval_seconds 判断是否需要执行检查
- * 3. 每个监控基于自身创建时间计算固定的检查时间点，不会因 cron 频率而同步
+ * 2. 根据每个监控的上次检查时间判断是否需要执行检查
+ * 3. 新添加的监控会立即触发第一次检查
  */
 
 import { getDb } from "./db";
@@ -31,6 +31,24 @@ export async function runSchedulerCycle(): Promise<{
 
     console.log(`[Scheduler] 找到 ${monitors.length} 个活跃监控`);
 
+    // 批量获取所有监控的最后检查时间
+    const monitorIds = monitors.map((m) => m.id);
+    const lastCheckTimes = monitorIds.length > 0
+      ? await sql`
+          SELECT monitor_id, MAX(checked_at) as last_check
+          FROM check_results
+          WHERE monitor_id = ANY(${monitorIds})
+          GROUP BY monitor_id
+        `
+      : [];
+
+    // 构建监控 ID -> 最后检查时间的映射
+    const lastCheckMap = new Map(
+      (lastCheckTimes as { monitor_id: string; last_check: string }[]).map(
+        (row) => [row.monitor_id, new Date(row.last_check)]
+      )
+    );
+
     let checkedCount = 0;
     let errors = 0;
 
@@ -38,7 +56,7 @@ export async function runSchedulerCycle(): Promise<{
     for (const monitor of monitors) {
       try {
         // 检查该监控是否需要执行检查
-        const shouldCheck = shouldCheckBySchedule(monitor);
+        const shouldCheck = shouldCheckBySchedule(monitor, lastCheckMap);
 
         if (shouldCheck) {
           // 执行健康检查
@@ -76,37 +94,50 @@ export async function runSchedulerCycle(): Promise<{
 /**
  * 判断监控是否需要执行检查
  *
- * 基于监控的创建时间计算固定的检查时间点，
- * 确保不同时间添加的监控始终保持各自的检查节奏，不会同步。
+ * 规则：
+ * 1. 如果没有任何检查记录（新监控），立即检查
+ * 2. 如果距离上次检查已超过间隔时间，立即检查
+ * 3. 允许 30 秒的窗口覆盖 cron 触发延迟
  *
  * 示例（间隔 5 分钟）：
- *   监控 A（18:00:00 创建）→ 检查时间: 18:00, 18:05, 18:10, 18:15 ...
- *   监控 B（18:02:00 创建）→ 检查时间: 18:02, 18:07, 18:12, 18:17 ...
+ *   上次检查 18:00 → 下次检查: 18:05, 18:10, 18:15 ...
  */
-function shouldCheckBySchedule(monitor: Monitor): boolean {
+function shouldCheckBySchedule(
+  monitor: Monitor,
+  lastCheckMap: Map<string, Date>
+): boolean {
   const now = new Date();
-  const createdAt = new Date(monitor.created_at);
-  const interval = monitor.check_interval_seconds;
+  const intervalSeconds = monitor.check_interval_seconds;
+  const intervalMs = intervalSeconds * 1000;
 
-  // 计算从创建到现在经过了多少秒
-  const secondsSinceCreation = (now.getTime() - createdAt.getTime()) / 1000;
+  // 获取该监控的最后检查时间
+  const lastCheckTime = lastCheckMap.get(monitor.id);
 
-  // 计算下一个固定检查时间点
-  // 例如：创建于 18:02，间隔 300 秒，已过 480 秒 → 480/300=1.6 → ceil=2 → 下次偏移=600 → 18:02+600=18:12
-  const nextCheckOffset = Math.ceil(secondsSinceCreation / interval) * interval;
-  const nextCheckTime = new Date(createdAt.getTime() + nextCheckOffset * 1000);
-
-  // 当前时间距离下次检查还有多少秒（负数表示已过期）
-  const secondsToNextCheck = (nextCheckTime.getTime() - now.getTime()) / 1000;
-
-  // 允许 30 秒的窗口：如果当前时间距离下次检查时间 ≤ 30 秒，执行检查
-  // 这覆盖了 cron 触发延迟的情况
-  if (secondsToNextCheck <= 30 && secondsToNextCheck > -interval) {
+  // 规则1: 如果没有任何检查记录（新监控），立即检查
+  if (!lastCheckTime) {
+    console.log(`[Scheduler] ${monitor.name}: 新监控，立即检查`);
     return true;
   }
 
-  // 如果已经错过了超过一个间隔（比如服务器停机过），立即检查
-  if (secondsToNextCheck <= -interval) {
+  // 计算距离上次检查过去了多少秒
+  const elapsed = now.getTime() - lastCheckTime.getTime();
+  const secondsSinceLastCheck = elapsed / 1000;
+
+  // 计算下一个固定检查时间点（基于上次检查时间）
+  const nextCheckOffset = Math.ceil(secondsSinceLastCheck / intervalSeconds) * intervalSeconds;
+  const nextCheckTime = new Date(lastCheckTime.getTime() + nextCheckOffset * 1000);
+
+  // 当前时间距离下次检查还有多少秒
+  const secondsToNextCheck = (nextCheckTime.getTime() - now.getTime()) / 1000;
+
+  // 规则2: 如果当前时间距离下次检查时间 ≤ 30 秒，执行检查（覆盖 cron 延迟）
+  if (secondsToNextCheck <= 30 && secondsToNextCheck > -intervalMs) {
+    return true;
+  }
+
+  // 规则3: 如果已经错过了超过一个间隔（比如服务器停机过），立即检查
+  if (secondsToNextCheck <= -intervalMs) {
+    console.log(`[Scheduler] ${monitor.name}: 错过检查窗口，立即检查`);
     return true;
   }
 
