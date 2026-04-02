@@ -38,6 +38,16 @@ export async function deleteCategory(id: string): Promise<void> {
   await sql`DELETE FROM categories WHERE id = ${id}`;
 }
 
+export async function updateCategory(id: string, name: string): Promise<Category> {
+  const sql = getDb();
+  const rows = await sql`
+    UPDATE categories SET name = ${name}
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return rows[0] as Category;
+}
+
 // ---------------------------------------------------------------------------
 // Monitors
 // ---------------------------------------------------------------------------

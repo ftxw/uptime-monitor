@@ -99,6 +99,10 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
     setShowCategoryDialog(false);
   }
 
+  function handleUpdateCategory(category: Category) {
+    mutateCategories();
+  }
+
   function handleDeleteCategory(id: string) {
     mutateCategories();
     if (categoryId === id) {
@@ -142,9 +146,9 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="edit-category">分类</Label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger id="edit-category" className="bg-background flex-1">
+                <SelectTrigger id="edit-category" className="bg-background flex-1 h-10">
                   <SelectValue placeholder="无分类" />
                 </SelectTrigger>
                 <SelectContent>
@@ -160,7 +164,7 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 shrink-0"
+                className="h-10 w-10 shrink-0"
                 onClick={() => setShowCategoryDialog(true)}
               >
                 <Pencil className="h-4 w-4" />
@@ -278,6 +282,7 @@ export function EditMonitorDialog({ monitor, onSave }: EditMonitorDialogProps) {
               categories={categories}
               onAddCategory={handleAddCategory}
               onDeleteCategory={handleDeleteCategory}
+              onUpdateCategory={handleUpdateCategory}
             />
           )}
         </DialogContent>

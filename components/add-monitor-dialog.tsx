@@ -98,6 +98,10 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
     setCategoryId(category.id);
   }
 
+  function handleUpdateCategory(category: Category) {
+    mutateCategories();
+  }
+
   function handleDeleteCategory(id: string) {
     mutateCategories();
     if (categoryId === id) {
@@ -270,6 +274,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
               categories={categories}
               onAddCategory={handleAddCategory}
               onDeleteCategory={handleDeleteCategory}
+              onUpdateCategory={handleUpdateCategory}
             />
           )}
         </DialogContent>
