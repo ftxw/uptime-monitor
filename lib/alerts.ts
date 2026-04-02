@@ -134,7 +134,6 @@ export async function sendDownAlert(
   for (const recipient of recipients) {
     await insertAlertLog({
       incident_id: incident.id,
-      monitor_id: monitor.id,
       channel: "email",
       recipient,
       success: result.success,
@@ -201,7 +200,6 @@ export async function sendRecoveryAlert(
   for (const recipient of recipients) {
     await insertAlertLog({
       incident_id: incident.id,
-      monitor_id: monitor.id,
       channel: "email",
       recipient,
       success: result.success,

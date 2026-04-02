@@ -173,16 +173,18 @@ export async function getDailyCheckResults(
         AND checked_at >= NOW() - make_interval(days => ${days})
       ORDER BY DATE(checked_at AT TIME ZONE 'UTC') DESC, checked_at DESC
     ),
-    daily_downtime AS (
+    monitor_interval AS (
+      SELECT check_interval_seconds FROM monitors WHERE id = ${monitorId}
+    ),
+    daily_stats AS (
       SELECT
         DATE(checked_at AT TIME ZONE 'UTC') as check_date,
         COUNT(*) FILTER (WHERE status = 'down') as down_count,
-        AVG(check_interval_seconds) as avg_interval_seconds
-      FROM check_results cr
-      JOIN monitors m ON cr.monitor_id = m.id
-      WHERE cr.monitor_id = ${monitorId}
-        AND cr.checked_at >= NOW() - make_interval(days => ${days})
-      GROUP BY DATE(cr.checked_at AT TIME ZONE 'UTC')
+        COUNT(*) as total_count
+      FROM check_results
+      WHERE monitor_id = ${monitorId}
+        AND checked_at >= NOW() - make_interval(days => ${days})
+      GROUP BY DATE(checked_at AT TIME ZONE 'UTC')
     ),
     base AS (
       SELECT DISTINCT ON (DATE(checked_at AT TIME ZONE 'UTC')) *
@@ -196,14 +198,14 @@ export async function getDailyCheckResults(
       CASE WHEN d.check_date IS NOT NULL THEN true ELSE false END as has_downtime,
       CASE WHEN d.check_date IS NOT NULL AND l.last_status = 'up' THEN true ELSE false END as recovered,
       CASE
-        WHEN dd.check_date IS NOT NULL AND dd.down_count > 0
-        THEN ROUND((dd.down_count::numeric * COALESCE(dd.avg_interval_seconds, 60)) / 60, 2)
+        WHEN s.check_date IS NOT NULL AND s.down_count > 0
+        THEN ROUND((s.down_count::numeric * COALESCE((SELECT check_interval_seconds FROM monitor_interval), 60)) / 60, 2)
         ELSE 0
       END as downtime_minutes
     FROM base b
     LEFT JOIN daily_down d ON DATE(b.checked_at AT TIME ZONE 'UTC') = d.check_date
     LEFT JOIN daily_last l ON DATE(b.checked_at AT TIME ZONE 'UTC') = l.check_date
-    LEFT JOIN daily_downtime dd ON DATE(b.checked_at AT TIME ZONE 'UTC') = dd.check_date
+    LEFT JOIN daily_stats s ON DATE(b.checked_at AT TIME ZONE 'UTC') = s.check_date
   `;
 
   return rows as CheckResult[];
@@ -277,7 +279,6 @@ export async function getIncidents(
 
 export async function insertAlertLog(data: {
   incident_id: string;
-  monitor_id: string;
   channel: "email" | "sms" | "signal";
   recipient: string;
   success: boolean;
@@ -285,9 +286,61 @@ export async function insertAlertLog(data: {
 }): Promise<void> {
   const sql = getDb();
   await sql`
-    INSERT INTO alert_log (incident_id, monitor_id, channel, recipient, success, error_message)
-    VALUES (${data.incident_id}, ${data.monitor_id}, ${data.channel}, ${data.recipient}, ${data.success}, ${data.error_message})
+    INSERT INTO alert_log (incident_id, channel, recipient, success, error_message)
+    VALUES (${data.incident_id}, ${data.channel}, ${data.recipient}, ${data.success}, ${data.error_message})
   `;
+}
+
+/**
+ * Cleanup old check results (retention policy)
+ * @param days - Number of days to retain (default: 30)
+ */
+export async function cleanupOldCheckResults(days = 30): Promise<number> {
+  const sql = getDb();
+  const result = await sql`
+    WITH deleted AS (
+      DELETE FROM check_results
+      WHERE checked_at < NOW() - (${days} || ' days')::INTERVAL
+      RETURNING id
+    )
+    SELECT COUNT(*) as count FROM deleted
+  `;
+  return parseInt((result[0] as { count: string }).count, 10);
+}
+
+/**
+ * Cleanup old alert logs (retention policy)
+ * @param days - Number of days to retain (default: 30)
+ */
+export async function cleanupOldAlertLogs(days = 30): Promise<number> {
+  const sql = getDb();
+  const result = await sql`
+    WITH deleted AS (
+      DELETE FROM alert_log
+      WHERE sent_at < NOW() - (${days} || ' days')::INTERVAL
+      RETURNING id
+    )
+    SELECT COUNT(*) as count FROM deleted
+  `;
+  return parseInt((result[0] as { count: string }).count, 10);
+}
+
+/**
+ * Cleanup old resolved incidents
+ * @param days - Number of days to retain after resolution (default: 30)
+ */
+export async function cleanupOldIncidents(days = 30): Promise<number> {
+  const sql = getDb();
+  const result = await sql`
+    WITH deleted AS (
+      DELETE FROM incidents
+      WHERE status = 'resolved'
+        AND resolved_at < NOW() - (${days} || ' days')::INTERVAL
+      RETURNING id
+    )
+    SELECT COUNT(*) as count FROM deleted
+  `;
+  return parseInt((result[0] as { count: string }).count, 10);
 }
 
 // ---------------------------------------------------------------------------
