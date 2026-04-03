@@ -13,9 +13,6 @@ import { getActiveMonitors } from "./queries";
 import { performCheck } from "./checker";
 import type { Monitor } from "./types";
 
-/** 延迟容错阈值：允许 cron 延迟触发的秒数 */
-const LATENCY_TOLERANCE_SECONDS = 30;
-
 /**
  * 执行一次调度周期，检查所有需要检查的监控
  */
@@ -100,11 +97,12 @@ export async function runSchedulerCycle(): Promise<{
  *
  * 规则：
  * 1. 如果没有任何检查记录（新监控），立即检查
- * 2. 如果距离上次检查 >= 间隔（到达检查时间）
- * 3. 额外允许最多 30 秒的 cron 延迟容错
+ * 2. 距上次检查 >= 间隔时间（允许 cron 延迟）
+ * 3. 最多延迟 30 秒（防止无限累积）
  *
  * 示例（5 分钟间隔）：
- *   上次检查 18:00 → 执行窗口: 18:05:00 ~ 18:05:30 → 18:10:00 ~ 18:10:30
+ *   上次检查 18:00 → 应在 18:05 检查
+ *   cron 触发时间在 18:05:00 ~ 18:05:30 → 执行检查
  */
 function shouldCheckBySchedule(
   monitor: Monitor,
@@ -116,26 +114,18 @@ function shouldCheckBySchedule(
   // 获取该监控的最后检查时间
   const lastCheckTime = lastCheckMap.get(monitor.id);
 
-  // 规则1: 如果没有任何检查记录（新监控），立即检查
+  // 规则1: 新监控，立即检查
   if (!lastCheckTime) {
     console.log(`[Scheduler] ${monitor.name}: 新监控，立即检查`);
     return true;
   }
 
-  // 计算距离上次检查经过的秒数
+  // 计算距上次检查经过的秒数
   const elapsedSeconds = (now.getTime() - lastCheckTime.getTime()) / 1000;
 
-  // 规则2: 到达检查时间（允许 30 秒延迟容错）
-  const targetTime = elapsedSeconds >= interval;
-  const withinTolerance = elapsedSeconds <= interval + LATENCY_TOLERANCE_SECONDS;
-
-  if (targetTime && withinTolerance) {
-    return true;
-  }
-
-  // 规则3: 超过容错窗口仍未检查（错过周期），立即检查
-  if (elapsedSeconds > interval + LATENCY_TOLERANCE_SECONDS) {
-    console.log(`[Scheduler] ${monitor.name}: 错过执行窗口 (${Math.round(elapsedSeconds)}s)，立即检查`);
+  // 规则2: 到达或超过检查时间
+  // 关键：只用 elapsed >= interval 判断，延迟执行也算正常
+  if (elapsedSeconds >= interval) {
     return true;
   }
 
