@@ -65,10 +65,10 @@ export function validateMethod(method: string): { valid: boolean; error?: string
 export function validateCheckInterval(
   seconds: number
 ): { valid: boolean; error?: string } {
-  if (typeof seconds !== "number" || seconds < 300) {
+  if (typeof seconds !== "number" || seconds < 60) {
     return {
       valid: false,
-      error: "Check interval must be at least 300 seconds (5 minutes)",
+      error: "Check interval must be at least 60 seconds (1 minute)",
     };
   }
 
