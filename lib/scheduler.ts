@@ -1,16 +1,11 @@
 /**
- * 调度器 - 基于绝对时间的监控调度系统
+ * 调度器 - 基于相对时间的监控调度系统
  *
  * 工作原理：
  * 1. cron 每分钟触发调度周期
- * 2. 计算每个监控的下次检查时间（忽略秒，分钟对齐）+ 间隔
- * 3. 在 [下次检查时间, 下次检查时间+30秒] 窗口内触发检查
+ * 2. 计算每个监控距上次检查的间隔
+ * 3. 如果间隔 >= 设置的检查间隔，立即触发检查
  * 4. 新监控会立即触发第一次检查
- *
- * 示例（5分钟间隔）：
- *   上次检查 11:30:10 → 归零秒: 11:30:00
- *   下次检查时间: 11:35:00
- *   触发窗口: 11:35:00 ~ 11:35:30
  */
 
 import { getDb } from "./db";
@@ -40,30 +35,17 @@ export async function runSchedulerCycle(): Promise<{
     // 获取当前时间
     const now = new Date();
 
-    // 计算每个监控的"下次检查时间"和"过期时间"
-    const checkScheduleMap = new Map<string, { nextTime: Date; expireTime: Date }>();
-    for (const monitor of monitors) {
-      // 获取该监控的最后检查时间
-      const lastCheckTime = await sql`
-        SELECT MAX(checked_at) as last_check
-        FROM check_results
-        WHERE monitor_id = ${monitor.id}
-      `;
-
-      if (lastCheckTime.length === 0 || !lastCheckTime[0].last_check) {
-        // 新监控，立即检查
-        checkScheduleMap.set(monitor.id, { nextTime: new Date(0), expireTime: new Date(0) });
-      } else {
-        // 计算下次检查时间：忽略秒，基于分钟对齐
-        const lastTime = new Date(lastCheckTime[0].last_check);
-        lastTime.setSeconds(0, 0); // 忽略秒和毫秒
-        const nextTime = new Date(lastTime.getTime() + monitor.check_interval_seconds * 1000);
-        
-        // 容错窗口：下次检查时间 + 30秒
-        const expireTime = new Date(nextTime.getTime() + 30 * 1000);
-        
-        checkScheduleMap.set(monitor.id, { nextTime, expireTime });
-      }
+    // 获取所有监控的最后检查时间
+    const lastCheckTimes = await sql`
+      SELECT monitor_id, MAX(checked_at) as last_check
+      FROM check_results
+      WHERE monitor_id IN ${sql(monitors.map(m => m.id))}
+      GROUP BY monitor_id
+    `;
+    
+    const lastCheckMap = new Map<string, Date>();
+    for (const row of lastCheckTimes) {
+      lastCheckMap.set(row.monitor_id, new Date(row.last_check));
     }
 
     let checkedCount = 0;
@@ -72,11 +54,29 @@ export async function runSchedulerCycle(): Promise<{
     // 依次检查每个监控
     for (const monitor of monitors) {
       try {
-        // 判断是否在触发窗口内
-        const schedule = checkScheduleMap.get(monitor.id)!;
+        const lastCheck = lastCheckMap.get(monitor.id);
         
-        // 在 [nextTime, expireTime] 窗口内触发
-        if (now >= schedule.nextTime && now <= schedule.expireTime) {
+        // 判断是否需要检查：新监控 或 当前时间 >= 归整后的下次检查时间
+        let shouldCheck = false;
+        
+        if (!lastCheck) {
+          // 新监控，立即检查
+          shouldCheck = true;
+        } else {
+          // 把上次检查时间归整到分钟（忽略秒）
+          const alignedLastCheck = new Date(lastCheck);
+          alignedLastCheck.setSeconds(0, 0);
+          
+          // 计算应该检查的时间
+          const nextCheckTime = new Date(
+            alignedLastCheck.getTime() + monitor.check_interval_seconds * 1000
+          );
+          
+          // 当前时间 >= 下次检查时间 时触发
+          shouldCheck = now >= nextCheckTime;
+        }
+        
+        if (shouldCheck) {
           // 执行健康检查
           const result = await performCheck(monitor);
 
