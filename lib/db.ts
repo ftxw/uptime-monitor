@@ -8,7 +8,7 @@ let isInitialized = false;
  * 类型安全的 SQL 执行函数
  * 统一返回 rows 数组
  */
-export function sql<T = Record<string, unknown>>(
+export function sql<T = any>(
   strings: TemplateStringsArray,
   ...values: unknown[]
 ): Promise<T[]> {
