@@ -36,12 +36,15 @@ export async function runSchedulerCycle(): Promise<{
     const now = new Date();
 
     // 获取所有监控的最后检查时间
-    const lastCheckTimes = await sql`
-      SELECT monitor_id, MAX(checked_at) as last_check
-      FROM check_results
-      WHERE monitor_id IN ${sql(monitors.map(m => m.id))}
-      GROUP BY monitor_id
-    `;
+    const monitorIds = monitors.map(m => m.id);
+    const lastCheckTimes = monitorIds.length > 0
+      ? await sql`
+        SELECT monitor_id, MAX(checked_at) as last_check
+        FROM check_results
+        WHERE monitor_id IN ${monitorIds}
+        GROUP BY monitor_id
+      `
+      : [];
     
     const lastCheckMap = new Map<string, Date>();
     for (const row of lastCheckTimes) {
