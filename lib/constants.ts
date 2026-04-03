@@ -4,6 +4,7 @@
 
 /** 检查间隔选项 */
 export const INTERVAL_OPTIONS = [
+  { label: "每 3 分钟", value: "180" },
   { label: "每 5 分钟", value: "300" },
   { label: "每 10 分钟", value: "600" },
   { label: "每 30 分钟", value: "1800" },
