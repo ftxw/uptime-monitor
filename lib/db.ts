@@ -57,7 +57,8 @@ async function initializeDatabaseLazy(sql: ReturnType<typeof neon>) {
       SELECT value FROM _db_meta WHERE key = 'initialized'
     `;
 
-    if (meta.length > 0 && (meta[0] as { value: string }).value === 'true') {
+    const rows = (meta as unknown as { rows: Array<{ value: string }> }).rows;
+    if (rows && rows.length > 0 && rows[0].value === 'true') {
       console.log("[DB] Already initialized, skipping auto-init");
       return;
     }
