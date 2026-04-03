@@ -56,7 +56,7 @@ export function MonitorDetail({ monitor: initialMonitor }: MonitorDetailProps) {
   async function handleRunCheck() {
     setChecking(true);
     try {
-      await fetch(`/api/monitors/${currentMonitor.id}/check`, { method: "POST" });
+      await fetch(`/api/monitors/${currentMonitor.id}/checks`, { method: "POST" });
       mutateChecks();
     } finally {
       setChecking(false);

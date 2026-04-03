@@ -90,7 +90,7 @@ function getDateKey(date: Date): string {
 
 export function UptimeBar({ monitorId }: UptimeBarProps) {
   const { data: checks } = useSWR<CheckResult[]>(
-    `/api/monitors/${monitorId}/checks/daily?days=30`,
+    `/api/monitors/${monitorId}/checks?type=daily&days=30`,
     fetcher,
     { refreshInterval: 120000 }
   );
