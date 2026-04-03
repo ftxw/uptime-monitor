@@ -80,7 +80,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
       setName("");
       setUrl("https://");
       setMethod("GET");
-      setInterval("300");
+      setInterval(INTERVAL_OPTIONS[0].value);
       setTimeout("30");
       setExpectedStatus("200");
       setCategoryId("none");
