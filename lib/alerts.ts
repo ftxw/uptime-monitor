@@ -1,4 +1,4 @@
-import { insertAlertLog } from "./queries";
+import { insertAlertLogBatch } from "./queries";
 import type { Monitor, Incident } from "./types";
 import type { CheckOutput } from "./checker";
 
@@ -130,16 +130,14 @@ export async function sendDownAlert(
 
   const result = await sendEmail({ to: recipients, subject, html });
 
-  // Log the alert
-  for (const recipient of recipients) {
-    await insertAlertLog({
-      incident_id: incident.id,
-      channel: "email",
-      recipient,
-      success: result.success,
-      error_message: result.error ?? null,
-    });
-  }
+  // 批量记录告警日志（解决 N+1 问题）
+  await insertAlertLogBatch(
+    incident.id,
+    "email",
+    recipients,
+    result.success,
+    result.error ?? null
+  );
 }
 
 /**
@@ -196,14 +194,12 @@ export async function sendRecoveryAlert(
 
   const result = await sendEmail({ to: recipients, subject, html });
 
-  // Log the alert
-  for (const recipient of recipients) {
-    await insertAlertLog({
-      incident_id: incident.id,
-      channel: "email",
-      recipient,
-      success: result.success,
-      error_message: result.error ?? null,
-    });
-  }
+  // 批量记录告警日志（解决 N+1 问题）
+  await insertAlertLogBatch(
+    incident.id,
+    "email",
+    recipients,
+    result.success,
+    result.error ?? null
+  );
 }

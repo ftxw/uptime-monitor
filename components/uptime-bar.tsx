@@ -7,18 +7,11 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { fetcher } from "@/lib/api";
+import { formatDuration } from "@/lib/utils";
 import type { CheckResult } from "@/lib/types";
 
 interface UptimeBarProps {
   monitorId: string;
-}
-
-function formatDuration(minutes: number): string {
-  if (minutes < 1) return "不足1分钟";
-  if (minutes < 60) return `${Math.round(minutes)} 分钟`;
-  const hours = Math.floor(minutes / 60);
-  const mins = Math.round(minutes % 60);
-  return mins > 0 ? `${hours} 小时 ${mins} 分钟` : `${hours} 小时`;
 }
 
 interface DayTooltipProps {

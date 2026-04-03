@@ -13,8 +13,8 @@ import { getActiveMonitors } from "./queries";
 import { performCheck } from "./checker";
 import type { Monitor } from "./types";
 
-/** 容错阈值：允许提前或延后执行的秒数 */
-const TOLERANCE_SECONDS = 30;
+/** 延迟容错阈值：允许 cron 延迟触发的秒数 */
+const LATENCY_TOLERANCE_SECONDS = 30;
 
 /**
  * 执行一次调度周期，检查所有需要检查的监控
@@ -100,11 +100,11 @@ export async function runSchedulerCycle(): Promise<{
  *
  * 规则：
  * 1. 如果没有任何检查记录（新监控），立即检查
- * 2. 如果距离上次检查 >= (间隔 - 容错)，且 <= (间隔 + 容错)，执行检查
- * 3. 如果已超过 (间隔 + 容错)（错过多个周期），立即检查
+ * 2. 如果距离上次检查 >= 间隔（到达检查时间）
+ * 3. 额外允许最多 30 秒的 cron 延迟容错
  *
- * 示例（5 分钟间隔，30 秒容错）：
- *   上次检查 18:00 → 执行窗口: 18:04:30 ~ 18:05:30 → 18:10:00 ~ 18:10:30
+ * 示例（5 分钟间隔）：
+ *   上次检查 18:00 → 执行窗口: 18:05:00 ~ 18:05:30 → 18:10:00 ~ 18:10:30
  */
 function shouldCheckBySchedule(
   monitor: Monitor,
@@ -112,8 +112,6 @@ function shouldCheckBySchedule(
 ): boolean {
   const now = new Date();
   const interval = monitor.check_interval_seconds;
-  const minInterval = interval - TOLERANCE_SECONDS;  // 最早执行时间
-  const maxInterval = interval + TOLERANCE_SECONDS;   // 最晚执行时间
 
   // 获取该监控的最后检查时间
   const lastCheckTime = lastCheckMap.get(monitor.id);
@@ -127,18 +125,20 @@ function shouldCheckBySchedule(
   // 计算距离上次检查经过的秒数
   const elapsedSeconds = (now.getTime() - lastCheckTime.getTime()) / 1000;
 
-  // 规则2: 在容错窗口内执行检查
-  // 条件：经过时间 >= 最小间隔 且 <= 最大间隔
-  if (elapsedSeconds >= minInterval && elapsedSeconds <= maxInterval) {
+  // 规则2: 到达检查时间（允许 30 秒延迟容错）
+  const targetTime = elapsedSeconds >= interval;
+  const withinTolerance = elapsedSeconds <= interval + LATENCY_TOLERANCE_SECONDS;
+
+  if (targetTime && withinTolerance) {
     return true;
   }
 
-  // 规则3: 如果超过最大间隔还没执行（错过周期），立即检查
-  if (elapsedSeconds > maxInterval) {
-    console.log(`[Scheduler] ${monitor.name}: 错过执行窗口 (${Math.round(elapsedSeconds)}s > ${maxInterval}s)，立即检查`);
+  // 规则3: 超过容错窗口仍未检查（错过周期），立即检查
+  if (elapsedSeconds > interval + LATENCY_TOLERANCE_SECONDS) {
+    console.log(`[Scheduler] ${monitor.name}: 错过执行窗口 (${Math.round(elapsedSeconds)}s)，立即检查`);
     return true;
   }
 
-  // 未到最早执行时间，跳过
+  // 未到检查时间，跳过
   return false;
 }

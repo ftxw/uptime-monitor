@@ -78,14 +78,3 @@ export async function clearSession(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE);
 }
-
-/**
- * Require authentication. Returns the session or throws an error.
- */
-export async function requireAuth(): Promise<UserSession> {
-  const session = await getSession();
-  if (!session) {
-    throw new Error("UNAUTHORIZED");
-  }
-  return session;
-}

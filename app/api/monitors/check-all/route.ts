@@ -6,27 +6,20 @@ import {
   getActiveIncident,
   createIncident,
   resolveIncident,
-  cleanupOldCheckResults,
-  cleanupOldAlertLogs,
-  cleanupOldIncidents,
+  runDatabaseCleanup,
+  type CleanupResult,
 } from "@/lib/queries";
 import { performCheck } from "@/lib/checker";
 import { sendDownAlert, sendRecoveryAlert } from "@/lib/alerts";
 
 /** 清理执行时间窗口：每天 3:00-3:05 */
 const CLEANUP_HOUR = 3;
-const RETENTION_DAYS = 30;
 
 interface CheckResult {
   monitor_id: string;
   name: string;
   status: string;
   response_time_ms: number | null;
-}
-
-interface CleanupResult {
-  table: string;
-  deleted: number;
 }
 
 /**
@@ -130,32 +123,8 @@ async function runDailyCleanup(): Promise<CleanupResult[] | null> {
     return null;
   }
 
-  const results: CleanupResult[] = [];
   console.log("[Cleanup] Starting daily data cleanup...");
-
-  try {
-    const deletedChecks = await cleanupOldCheckResults(RETENTION_DAYS);
-    results.push({ table: "check_results", deleted: deletedChecks });
-    console.log(`[Cleanup] Deleted ${deletedChecks} old check results`);
-  } catch (error) {
-    console.error("[Cleanup] Error cleaning check_results:", error);
-  }
-
-  try {
-    const deletedAlerts = await cleanupOldAlertLogs(RETENTION_DAYS);
-    results.push({ table: "alert_log", deleted: deletedAlerts });
-    console.log(`[Cleanup] Deleted ${deletedAlerts} old alert logs`);
-  } catch (error) {
-    console.error("[Cleanup] Error cleaning alert_log:", error);
-  }
-
-  try {
-    const deletedIncidents = await cleanupOldIncidents(RETENTION_DAYS);
-    results.push({ table: "incidents", deleted: deletedIncidents });
-    console.log(`[Cleanup] Deleted ${deletedIncidents} old incidents`);
-  } catch (error) {
-    console.error("[Cleanup] Error cleaning incidents:", error);
-  }
+  const results = await runDatabaseCleanup();
 
   const total = results.reduce((sum, r) => sum + r.deleted, 0);
   console.log(`[Cleanup] Total deleted: ${total} records`);

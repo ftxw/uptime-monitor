@@ -10,49 +10,14 @@
  *   npx tsx scripts/cleanup-database.ts
  */
 
-import { cleanupOldCheckResults, cleanupOldAlertLogs, cleanupOldIncidents } from "../lib/queries";
+import { runDatabaseCleanup } from "../lib/queries";
 
 const RETENTION_DAYS = 30;
-
-interface CleanupResult {
-  table: string;
-  deleted: number;
-}
 
 async function cleanup() {
   console.log(`🧹 Starting database cleanup (retention: ${RETENTION_DAYS} days)...\n`);
 
-  const results: CleanupResult[] = [];
-
-  // Cleanup old check results
-  try {
-    console.log(`📊 Cleaning up check_results...`);
-    const deletedChecks = await cleanupOldCheckResults(RETENTION_DAYS);
-    results.push({ table: "check_results", deleted: deletedChecks });
-    console.log(`   ✓ Deleted ${deletedChecks} old check results\n`);
-  } catch (error) {
-    console.error("   ✗ Error cleaning check_results:", error);
-  }
-
-  // Cleanup old alert logs
-  try {
-    console.log(`📧 Cleaning up alert_log...`);
-    const deletedAlerts = await cleanupOldAlertLogs(RETENTION_DAYS);
-    results.push({ table: "alert_log", deleted: deletedAlerts });
-    console.log(`   ✓ Deleted ${deletedAlerts} old alert logs\n`);
-  } catch (error) {
-    console.error("   ✗ Error cleaning alert_log:", error);
-  }
-
-  // Cleanup old resolved incidents
-  try {
-    console.log(`🔔 Cleaning up resolved incidents...`);
-    const deletedIncidents = await cleanupOldIncidents(RETENTION_DAYS);
-    results.push({ table: "incidents", deleted: deletedIncidents });
-    console.log(`   ✓ Deleted ${deletedIncidents} old incidents\n`);
-  } catch (error) {
-    console.error("   ✗ Error cleaning incidents:", error);
-  }
+  const results = await runDatabaseCleanup(RETENTION_DAYS);
 
   // Summary
   const total = results.reduce((sum, r) => sum + r.deleted, 0);

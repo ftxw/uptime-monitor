@@ -22,3 +22,14 @@ export function formatResponseTime(ms: number | null): string {
   if (ms < 1000) return `${ms}ms`;
   return `${(ms / 1000).toFixed(2)}s`;
 }
+
+/**
+ * 格式化时长（分钟）为可读格式
+ */
+export function formatDuration(minutes: number): string {
+  if (minutes < 1) return "不足1分钟";
+  if (minutes < 60) return `${Math.round(minutes)} 分钟`;
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  return mins > 0 ? `${hours} 小时 ${mins} 分钟` : `${hours} 小时`;
+}

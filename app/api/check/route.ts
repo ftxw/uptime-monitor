@@ -1,6 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runSchedulerCycle } from "@/lib/scheduler";
 
+/** 共享的响应头 */
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+/**
+ * 验证 CRON_SECRET（在生产环境）
+ */
+function verifyCronAuth(request: NextRequest): Response | null {
+  if (process.env.NODE_ENV === "production" && process.env.CRON_SECRET) {
+    const authHeader = request.headers.get("authorization");
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+  return null;
+}
+
+/**
+ * 执行检查并返回响应
+ */
+async function handleCheckRequest(
+  request: NextRequest,
+  addCorsHeaders = true
+): Promise<NextResponse> {
+  // 验证 CRON_SECRET
+  const authError = verifyCronAuth(request);
+  if (authError) return authError as NextResponse;
+
+  // 执行调度周期
+  const result = await runSchedulerCycle();
+
+  const response = NextResponse.json({
+    success: true,
+    message: `Checked ${result.checkedCount} monitor(s)` +
+             (result.errors > 0 ? `, ${result.errors} error(s)` : ""),
+    checked: result.checkedCount,
+    errors: result.errors,
+  });
+
+  // 添加 CORS 响应头
+  if (addCorsHeaders) {
+    response.headers.set("Access-Control-Allow-Origin", "*");
+  }
+
+  return response;
+}
+
 /**
  * POST /api/check
  *
@@ -13,31 +63,7 @@ import { runSchedulerCycle } from "@/lib/scheduler";
  */
 export async function POST(request: NextRequest) {
   try {
-    // 生产环境验证 CRON_SECRET
-    if (process.env.NODE_ENV === "production" && process.env.CRON_SECRET) {
-      const authHeader = request.headers.get("authorization");
-      if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-    }
-
-    // 执行调度周期
-    const result = await runSchedulerCycle();
-
-    const response = NextResponse.json({
-      success: true,
-      message: `Checked ${result.checkedCount} monitor(s)` +
-               (result.errors > 0 ? `, ${result.errors} error(s)` : ""),
-      checked: result.checkedCount,
-      errors: result.errors,
-    });
-
-    // 添加 CORS 响应头（支持跨域请求）
-    response.headers.set("Access-Control-Allow-Origin", "*");
-    response.headers.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-    response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-    return response;
+    return await handleCheckRequest(request, true);
   } catch (error) {
     console.error("[API] Error in check endpoint:", error);
     return NextResponse.json(
@@ -57,9 +83,9 @@ export async function POST(request: NextRequest) {
  */
 export async function OPTIONS() {
   const response = new NextResponse(null, { status: 204 });
-  response.headers.set("Access-Control-Allow-Origin", "*");
-  response.headers.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-  response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  for (const [key, value] of Object.entries(CORS_HEADERS)) {
+    response.headers.set(key, value);
+  }
   return response;
 }
 
@@ -70,27 +96,7 @@ export async function OPTIONS() {
  */
 export async function GET(request: NextRequest) {
   try {
-    // 生产环境验证 CRON_SECRET
-    if (process.env.NODE_ENV === "production" && process.env.CRON_SECRET) {
-      const authHeader = request.headers.get("authorization");
-      if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-    }
-
-    const result = await runSchedulerCycle();
-
-    const response = NextResponse.json({
-      success: true,
-      message: `Checked ${result.checkedCount} monitor(s)`,
-      checked: result.checkedCount,
-      errors: result.errors,
-    });
-
-    // 添加 CORS 响应头
-    response.headers.set("Access-Control-Allow-Origin", "*");
-
-    return response;
+    return await handleCheckRequest(request, true);
   } catch (error) {
     console.error("[API] Error in check endpoint:", error);
     return NextResponse.json(

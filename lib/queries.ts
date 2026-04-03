@@ -302,6 +302,25 @@ export async function insertAlertLog(data: {
 }
 
 /**
+ * 批量插入告警日志（解决 N+1 问题）
+ */
+export async function insertAlertLogBatch(
+  incidentId: string,
+  channel: "email" | "sms" | "signal",
+  recipients: string[],
+  success: boolean,
+  errorMessage: string | null
+): Promise<void> {
+  if (recipients.length === 0) return;
+  const sql = getDb();
+  await sql`
+    INSERT INTO alert_log (incident_id, channel, recipient, success, error_message)
+    SELECT ${incidentId}, ${channel}, recipient, ${success}, ${errorMessage}
+    FROM UNNEST(${recipients}) AS recipient
+  `;
+}
+
+/**
  * Cleanup old check results (retention policy)
  * @param days - Number of days to retain (default: 30)
  */
@@ -351,6 +370,46 @@ export async function cleanupOldIncidents(days = 30): Promise<number> {
     SELECT COUNT(*) as count FROM deleted
   `;
   return parseInt((result[0] as { count: string }).count, 10);
+}
+
+// ---------------------------------------------------------------------------
+// Database Cleanup (统一入口)
+// ---------------------------------------------------------------------------
+
+export interface CleanupResult {
+  table: string;
+  deleted: number;
+}
+
+/**
+ * 统一执行数据库清理
+ * 调用三个清理函数，返回各表删除数量
+ */
+export async function runDatabaseCleanup(days = 30): Promise<CleanupResult[]> {
+  const results: CleanupResult[] = [];
+
+  try {
+    const deletedChecks = await cleanupOldCheckResults(days);
+    results.push({ table: "check_results", deleted: deletedChecks });
+  } catch (error) {
+    console.error("[Cleanup] Error cleaning check_results:", error);
+  }
+
+  try {
+    const deletedAlerts = await cleanupOldAlertLogs(days);
+    results.push({ table: "alert_log", deleted: deletedAlerts });
+  } catch (error) {
+    console.error("[Cleanup] Error cleaning alert_log:", error);
+  }
+
+  try {
+    const deletedIncidents = await cleanupOldIncidents(days);
+    results.push({ table: "incidents", deleted: deletedIncidents });
+  } catch (error) {
+    console.error("[Cleanup] Error cleaning incidents:", error);
+  }
+
+  return results;
 }
 
 // ---------------------------------------------------------------------------
