@@ -37,7 +37,7 @@ export function AddMonitorDialog({ onAdd }: AddMonitorDialogProps) {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("https://");
   const [method, setMethod] = useState("GET");
-  const [interval, setInterval] = useState(INTERVAL_OPTIONS[0].value);
+  const [interval, setInterval] = useState<string>(INTERVAL_OPTIONS[0].value);
   const [timeout, setTimeout] = useState("30");
   const [expectedStatus, setExpectedStatus] = useState("200");
   const [categoryId, setCategoryId] = useState<string>("none");
