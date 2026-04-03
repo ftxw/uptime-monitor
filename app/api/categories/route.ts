@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getCategories, createCategory, deleteCategory } from "@/lib/queries";
+import { getCategories, createCategory, deleteCategory, initializeDatabase } from "@/lib/queries";
 
 /**
  * GET /api/categories - Get all categories
@@ -11,6 +11,9 @@ export async function GET() {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // 确保数据库已初始化
+    await initializeDatabase();
 
     const categories = await getCategories();
     return NextResponse.json(categories);
