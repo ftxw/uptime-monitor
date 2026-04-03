@@ -139,7 +139,7 @@ export async function POST() {
 /**
  * 每日清理逻辑：只在每天 3:00-3:05 之间执行一次
  */
-async function runDailyCleanup(): Promise<CleanupResult | null> {
+async function runDailyCleanup(): Promise<CleanupResult[] | null> {
   const now = new Date();
   const hour = now.getUTCHours();
 
