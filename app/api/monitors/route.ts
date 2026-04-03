@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getMonitors, createMonitor, initializeDatabase } from "@/lib/queries";
+import { getMonitors, createMonitor } from "@/lib/queries";
 import {
   validateMonitorName,
   validateUrl,
@@ -21,9 +21,6 @@ export async function GET() {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    // 确保数据库已初始化
-    await initializeDatabase();
 
     const monitors = await getMonitors();
     return NextResponse.json(monitors);

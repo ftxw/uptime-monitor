@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getMonitorsWithStatus, computeDashboardStats, initializeDatabase } from "@/lib/queries";
+import { getMonitorsWithStatus, computeDashboardStats } from "@/lib/queries";
 
 /**
  * GET /api/dashboard - Get all dashboard data (monitors with status + stats)
@@ -11,9 +11,6 @@ export async function GET() {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    // 确保数据库已初始化
-    await initializeDatabase();
 
     const monitors = await getMonitorsWithStatus();
     const stats = computeDashboardStats(monitors);
