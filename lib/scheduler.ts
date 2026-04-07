@@ -9,7 +9,7 @@
  */
 
 import { getDb } from "./db";
-import { getActiveMonitors } from "./queries";
+import { getActiveMonitors, getActiveIncident, createIncident, resolveIncident } from "./queries";
 import { performCheck } from "./checker";
 import type { Monitor } from "./types";
 
@@ -83,6 +83,19 @@ export async function runSchedulerCycle(): Promise<{
               ${result.ssl_valid}, ${result.ssl_expires_at}, ${result.ssl_days_remaining}, ${result.error_message}
             )
           `;
+
+          // 处理incident
+          const activeIncident = await getActiveIncident(monitor.id);
+          if (result.status === "down") {
+            if (!activeIncident) {
+              await createIncident({
+                monitor_id: monitor.id,
+                cause: result.error_message,
+              });
+            }
+          } else if (result.status === "up" && activeIncident) {
+            await resolveIncident(activeIncident.id);
+          }
 
           console.log(`[Scheduler] 检查 ${monitor.name}: ${result.status} (${result.response_time_ms}ms)`);
           checkedCount++;
