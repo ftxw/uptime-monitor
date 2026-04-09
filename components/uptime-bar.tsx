@@ -80,11 +80,11 @@ function DayTooltip({ check, daysAgo }: DayTooltipProps) {
  * 一个可视化的条形图,显示最近 30 天的检查结果为彩色段。
  * 绿色 = 正常,红色 = 故障未恢复/全天故障,半透明红色 = 有故障但已恢复,黄色 = 降级,灰色 = 无数据。
  */
-// 辅助函数：获取日期的年月日字符串（YYYY-MM-DD），使用 UTC 时间以匹配数据库的时区处理
+// 辅助函数：获取日期的年月日字符串（YYYY-MM-DD），使用本地时区
 function getDateKey(date: Date): string {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
