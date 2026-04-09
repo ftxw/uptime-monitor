@@ -80,18 +80,15 @@ function DayTooltip({ check, daysAgo }: DayTooltipProps) {
  * 一个可视化的条形图,显示最近 30 天的检查结果为彩色段。
  * 绿色 = 正常,红色 = 故障未恢复/全天故障,半透明红色 = 有故障但已恢复,黄色 = 降级,灰色 = 无数据。
  */
-// 辅助函数：获取日期的年月日字符串（YYYY-MM-DD），使用北京时间（UTC+8）
-// 统一使用 Asia/Shanghai 时区，与后端保持一致
+// 辅助函数：获取日期的年月日字符串（YYYY-MM-DD），使用北京时间（Asia/Shanghai）
 function getDateKey(date: Date): string {
-  // 获取本地时区偏移（毫秒），中国是 UTC+8，即 -480 分钟（负数表示东区）
-  const offset = date.getTimezoneOffset();
-  // 转换为北京时间：先将本地时间转换为 UTC，再加 8 小时
-  // 或者直接用：北京时间 = 本地时间 + (8 * 60 - getTimezoneOffset()) * 60 * 1000
-  const beijingTime = new Date(date.getTime() + (480 + offset) * 60 * 1000);
-  const year = beijingTime.getFullYear();
-  const month = String(beijingTime.getMonth() + 1).padStart(2, '0');
-  const day = String(beijingTime.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return formatter.format(date);
 }
 
 export function UptimeBar({ monitorId }: UptimeBarProps) {
