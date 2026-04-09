@@ -167,11 +167,14 @@ export async function getDailyCheckResults(
 ): Promise<CheckResult[]> {
   const sql = getDb();
   const rows = await sql`
-    WITH daily_down AS (
+    WITH start_date AS (
+      SELECT (NOW() AT TIME ZONE 'UTC') - make_interval(days => ${days}) as start_ts
+    ),
+    daily_down AS (
       SELECT DISTINCT DATE(checked_at AT TIME ZONE 'UTC') as check_date
       FROM check_results
       WHERE monitor_id = ${monitorId}
-        AND checked_at >= NOW() - make_interval(days => ${days})
+        AND checked_at >= (SELECT start_ts FROM start_date)
         AND status = 'down'
     ),
     daily_last AS (
@@ -180,7 +183,7 @@ export async function getDailyCheckResults(
         status as last_status
       FROM check_results
       WHERE monitor_id = ${monitorId}
-        AND checked_at >= NOW() - make_interval(days => ${days})
+        AND checked_at >= (SELECT start_ts FROM start_date)
       ORDER BY DATE(checked_at AT TIME ZONE 'UTC') DESC, checked_at DESC
     ),
     monitor_interval AS (
@@ -193,14 +196,14 @@ export async function getDailyCheckResults(
         COUNT(*) as total_count
       FROM check_results
       WHERE monitor_id = ${monitorId}
-        AND checked_at >= NOW() - make_interval(days => ${days})
+        AND checked_at >= (SELECT start_ts FROM start_date)
       GROUP BY DATE(checked_at AT TIME ZONE 'UTC')
     ),
     base AS (
       SELECT DISTINCT ON (DATE(checked_at AT TIME ZONE 'UTC')) *
       FROM check_results
       WHERE monitor_id = ${monitorId}
-        AND checked_at >= NOW() - make_interval(days => ${days})
+        AND checked_at >= (SELECT start_ts FROM start_date)
       ORDER BY DATE(checked_at AT TIME ZONE 'UTC') DESC, checked_at DESC
     )
     SELECT
