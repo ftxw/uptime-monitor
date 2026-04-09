@@ -168,43 +168,43 @@ export async function getDailyCheckResults(
   const sql = getDb();
   const rows = await sql`
     WITH start_date AS (
-      SELECT (NOW() AT TIME ZONE 'UTC') - make_interval(days => ${days}) as start_ts
+      SELECT (NOW() AT TIME ZONE 'Asia/Shanghai') - make_interval(days => ${days}) as start_ts
     ),
     daily_down AS (
-      SELECT DISTINCT DATE(checked_at AT TIME ZONE 'UTC') as check_date
+      SELECT DISTINCT DATE(checked_at AT TIME ZONE 'Asia/Shanghai') as check_date
       FROM check_results
       WHERE monitor_id = ${monitorId}
         AND checked_at >= (SELECT start_ts FROM start_date)
         AND status = 'down'
     ),
     daily_last AS (
-      SELECT DISTINCT ON (DATE(checked_at AT TIME ZONE 'UTC'))
-        DATE(checked_at AT TIME ZONE 'UTC') as check_date,
+      SELECT DISTINCT ON (DATE(checked_at AT TIME ZONE 'Asia/Shanghai'))
+        DATE(checked_at AT TIME ZONE 'Asia/Shanghai') as check_date,
         status as last_status
       FROM check_results
       WHERE monitor_id = ${monitorId}
         AND checked_at >= (SELECT start_ts FROM start_date)
-      ORDER BY DATE(checked_at AT TIME ZONE 'UTC') DESC, checked_at DESC
+      ORDER BY DATE(checked_at AT TIME ZONE 'Asia/Shanghai') DESC, checked_at DESC
     ),
     monitor_interval AS (
       SELECT check_interval_seconds FROM monitors WHERE id = ${monitorId}
     ),
     daily_stats AS (
       SELECT
-        DATE(checked_at AT TIME ZONE 'UTC') as check_date,
+        DATE(checked_at AT TIME ZONE 'Asia/Shanghai') as check_date,
         COUNT(*) FILTER (WHERE status = 'down') as down_count,
         COUNT(*) as total_count
       FROM check_results
       WHERE monitor_id = ${monitorId}
         AND checked_at >= (SELECT start_ts FROM start_date)
-      GROUP BY DATE(checked_at AT TIME ZONE 'UTC')
+      GROUP BY DATE(checked_at AT TIME ZONE 'Asia/Shanghai')
     ),
     base AS (
-      SELECT DISTINCT ON (DATE(checked_at AT TIME ZONE 'UTC')) *
+      SELECT DISTINCT ON (DATE(checked_at AT TIME ZONE 'Asia/Shanghai')) *
       FROM check_results
       WHERE monitor_id = ${monitorId}
         AND checked_at >= (SELECT start_ts FROM start_date)
-      ORDER BY DATE(checked_at AT TIME ZONE 'UTC') DESC, checked_at DESC
+      ORDER BY DATE(checked_at AT TIME ZONE 'Asia/Shanghai') DESC, checked_at DESC
     )
     SELECT
       b.*,
@@ -216,9 +216,9 @@ export async function getDailyCheckResults(
         ELSE 0
       END as downtime_minutes
     FROM base b
-    LEFT JOIN daily_down d ON DATE(b.checked_at AT TIME ZONE 'UTC') = d.check_date
-    LEFT JOIN daily_last l ON DATE(b.checked_at AT TIME ZONE 'UTC') = l.check_date
-    LEFT JOIN daily_stats s ON DATE(b.checked_at AT TIME ZONE 'UTC') = s.check_date
+    LEFT JOIN daily_down d ON DATE(b.checked_at AT TIME ZONE 'Asia/Shanghai') = d.check_date
+    LEFT JOIN daily_last l ON DATE(b.checked_at AT TIME ZONE 'Asia/Shanghai') = l.check_date
+    LEFT JOIN daily_stats s ON DATE(b.checked_at AT TIME ZONE 'Asia/Shanghai') = s.check_date
   `;
 
   return rows as CheckResult[];
